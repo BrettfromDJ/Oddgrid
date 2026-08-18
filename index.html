@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oddgrid Pixel Type</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#0B0B0D;
+  --panel:#131317;
+  --panel-2:#191920;
+  --line:#25252C;
+  --line-soft:#1D1D23;
+  --ink:#E6E5E1;
+  --ink-dim:#8B8B95;
+  --ink-faint:#5C5C66;
+  --amber:#FFB020;
+  --amber-soft:rgba(255,176,32,.14);
+  --mono:"DM Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:6px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--ground);
+  color:var(--ink);
+  font-family:var(--mono);
+  font-size:13px;
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+.app{
+  height:100dvh;
+  display:grid;
+  grid-template-columns:1fr 328px;
+  grid-template-rows:auto 1fr;
+  gap:1px;
+  background:var(--line-soft);
+}
+.topbar{
+  grid-column:1/-1;
+  background:var(--ground);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:14px 20px;
+}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand b{
+  font-weight:500;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  font-size:12px;
+}
+.brand span{color:var(--ink-faint);letter-spacing:.06em;font-size:11px}
+.hint{color:var(--ink-faint);font-size:11px;letter-spacing:.04em}
+.hint em{color:var(--amber);font-style:normal}
+
+.stage{background:var(--ground);position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
+
+.rail{
+  background:var(--ground);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+}
+.mod{background:var(--panel);padding:14px 16px 16px}
+.mod-head{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin-bottom:12px;
+}
+.mod h2{
+  margin:0;font-size:10px;font-weight:500;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--ink-dim);
+}
+.mod.on h2{color:var(--amber)}
+.ctrls{display:flex;flex-direction:column;gap:11px}
+
+.ctl{display:grid;grid-template-columns:78px 1fr 40px;align-items:center;gap:10px}
+.ctl .k{color:var(--ink-faint);font-size:11px;letter-spacing:.04em}
+.ctl output{
+  color:var(--ink-dim);font-size:11px;text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.ctl.wide{grid-template-columns:1fr}
+
+input[type=text]{
+  width:100%;background:var(--panel-2);border:1px solid var(--line);
+  color:var(--ink);font:inherit;font-size:13px;padding:9px 11px;border-radius:var(--r);
+  letter-spacing:.03em;
+}
+input[type=text]:focus-visible,select:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+.field-note{color:var(--ink-faint);font-size:10.5px;margin-top:7px;letter-spacing:.03em}
+
+select{
+  width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+  font:inherit;font-size:12px;padding:7px 9px;border-radius:var(--r);
+}
+
+input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;margin:0;
+}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line);border-radius:2px}
+input[type=range]::-moz-range-track{height:2px;background:var(--line);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
+  background:var(--ink-dim);margin-top:-4.5px;border:0;transition:background .15s;
+}
+input[type=range]::-moz-range-thumb{
+  width:11px;height:11px;border-radius:50%;background:var(--ink-dim);border:0;
+}
+.mod.on input[type=range]::-webkit-slider-thumb{background:var(--amber)}
+.mod.on input[type=range]::-moz-range-thumb{background:var(--amber)}
+input[type=range]:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:2px}
+input[type=range]:disabled{opacity:.35}
+
+.sw{position:relative;display:inline-flex;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.sw span{
+  width:32px;height:18px;border-radius:9px;background:var(--panel-2);
+  border:1px solid var(--line);display:block;position:relative;transition:.18s;
+}
+.sw span::after{
+  content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
+  background:var(--ink-faint);transition:.18s;
+}
+.sw input:checked + span{background:var(--amber-soft);border-color:rgba(255,176,32,.5)}
+.sw input:checked + span::after{transform:translateX(14px);background:var(--amber)}
+.sw input:focus-visible + span{outline:2px solid var(--amber);outline-offset:2px}
+
+.swatches{display:flex;gap:6px}
+.swatch{
+  width:22px;height:22px;border-radius:50%;border:1px solid var(--line);
+  padding:0;cursor:pointer;transition:transform .12s;
+}
+.swatch:hover{transform:scale(1.12)}
+.swatch[aria-pressed=true]{box-shadow:0 0 0 2px var(--ground),0 0 0 3px var(--amber)}
+.swatch:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+.foot{padding:14px 16px 22px;color:var(--ink-faint);font-size:10.5px;letter-spacing:.03em;background:var(--panel)}
+.foot kbd{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:3px;
+  padding:1px 5px;color:var(--ink-dim);font:inherit;font-size:10px;
+}
+
+@media (max-width:880px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto 46vh 1fr}
+  .rail{max-height:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .sw span,.sw span::after{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><b>Oddgrid</b><span>pixel type</span></div>
+    <div class="hint">move the pointer over the type — <em>hold to push harder</em></div>
+  </header>
+
+  <main class="stage" id="stage">
+    <canvas id="c"></canvas>
+  </main>
+
+  <aside class="rail">
+
+    <section class="mod on">
+      <div class="mod-head"><h2>Type</h2></div>
+      <div class="ctrls">
+        <div class="ctl wide">
+          <input type="text" id="text" value="ODDGRID, MOTION, PIXEL, TYPE" autocomplete="off" spellcheck="false" aria-label="Text">
+          <div class="field-note">Separate with commas to cycle through words.</div>
+        </div>
+        <div class="ctl"><span class="k">Face</span>
+          <select id="font" style="grid-column:2/-1">
+            <option value='"Archivo Black",Impact,sans-serif'>Archivo Black</option>
+            <option value='Georgia,"Times New Roman",serif'>Georgia</option>
+            <option value='"DM Mono",monospace'>DM Mono</option>
+            <option value='Helvetica,Arial,sans-serif'>Helvetica</option>
+          </select>
+        </div>
+        <label class="ctl"><span class="k">Fill</span>
+          <input type="range" id="fit" min="30" max="96" value="78"><output id="fitOut">78%</output>
+        </label>
+      </div>
+    </section>
+
+    <section class="mod on">
+      <div class="mod-head"><h2>Grid</h2></div>
+      <div class="ctrls">
+        <label class="ctl"><span class="k">Cell</span>
+          <input type="range" id="cell" min="5" max="26" value="11"><output id="cellOut">11</output>
+        </label>
+        <label class="ctl"><span class="k">Dot size</span>
+          <input type="range" id="dot" min="20" max="130" value="82"><output id="dotOut">82%</output>
+        </label>
+        <div class="ctl"><span class="k">Shape</span>
+          <select id="shape" style="grid-column:2/-1">
+            <option value="square">Square</option>
+            <option value="circle" selected>Circle</option>
+            <option value="diamond">Diamond</option>
+          </select>
+        </div>
+        <div class="ctl"><span class="k">Colour</span>
+          <div class="swatches" style="grid-column:2/-1" id="swatches"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mod on" id="modMorph">
+      <div class="mod-head"><h2>Morph</h2>
+        <label class="sw"><input type="checkbox" id="morphOn" checked aria-label="Morph"><span></span></label>
+      </div>
+      <div class="ctrls">
+        <label class="ctl"><span class="k">Travel</span>
+          <input type="range" id="morphSpeed" min="4" max="60" value="20"><output id="morphSpeedOut">0.20</output>
+        </label>
+        <label class="ctl"><span class="k">Settle</span>
+          <input type="range" id="morphDamp" min="55" max="95" value="76"><output id="morphDampOut">0.76</output>
+        </label>
+        <label class="ctl"><span class="k">Scatter</span>
+          <input type="range" id="morphScatter" min="0" max="240" value="70"><output id="morphScatterOut">70</output>
+        </label>
+        <label class="ctl"><span class="k">Cycle</span>
+          <input type="range" id="cycle" min="0" max="8" step="0.5" value="2.5"><output id="cycleOut">2.5s</output>
+        </label>
+      </div>
+    </section>
+
+    <section class="mod on" id="modRepel">
+      <div class="mod-head"><h2>Repel</h2>
+        <label class="sw"><input type="checkbox" id="repelOn" checked aria-label="Repel"><span></span></label>
+      </div>
+      <div class="ctrls">
+        <label class="ctl"><span class="k">Radius</span>
+          <input type="range" id="repelR" min="40" max="420" value="170"><output id="repelROut">170</output>
+        </label>
+        <label class="ctl"><span class="k">Force</span>
+          <input type="range" id="repelF" min="-120" max="160" value="70"><output id="repelFOut">70</output>
+        </label>
+        <label class="ctl"><span class="k">Lag</span>
+          <input type="range" id="repelLag" min="4" max="40" value="16"><output id="repelLagOut">0.16</output>
+        </label>
+      </div>
+    </section>
+
+    <section class="mod on" id="modWave">
+      <div class="mod-head"><h2>Wave</h2>
+        <label class="sw"><input type="checkbox" id="waveOn" checked aria-label="Wave"><span></span></label>
+      </div>
+      <div class="ctrls">
+        <label class="ctl"><span class="k">Amount</span>
+          <input type="range" id="waveAmp" min="0" max="100" value="46"><output id="waveAmpOut">0.46</output>
+        </label>
+        <label class="ctl"><span class="k">Length</span>
+          <input type="range" id="waveLen" min="40" max="700" value="240"><output id="waveLenOut">240</output>
+        </label>
+        <label class="ctl"><span class="k">Speed</span>
+          <input type="range" id="waveSpeed" min="0" max="100" value="34"><output id="waveSpeedOut">0.34</output>
+        </label>
+        <label class="ctl"><span class="k">Angle</span>
+          <input type="range" id="waveAngle" min="0" max="359" value="28"><output id="waveAngleOut">28°</output>
+        </label>
+      </div>
+    </section>
+
+    <div class="foot">Press <kbd>Space</kbd> to jump to the next word.</div>
+  </aside>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+const $ = id => document.getElementById(id);
+const clamp = (v,a,b) => v < a ? a : v > b ? b : v;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const canvas = $("c");
+const ctx = canvas.getContext("2d", { alpha:false });
+const stage = $("stage");
+
+/* ---------- state ---------- */
+const S = {
+  words:["ODDGRID"], wordIndex:0, wordTimer:0,
+  font:'"Archivo Black",Impact,sans-serif',
+  fit:0.78, cell:11, dotScale:0.82, shape:"circle",
+  colour:"#FFB020",
+  morph:{ on:true, k:0.20, damp:0.76, scatter:70, cycle:2.5 },
+  repel:{ on:true, r:170, f:70, lag:0.16 },
+  wave:{ on:!reduced, amp:0.46, len:240, speed:0.34, angle:28 }
+};
+
+let W = 0, H = 0;
+let dots = [];
+let pointer = { x:-9999, y:-9999, sx:-9999, sy:-9999, down:false, inside:false };
+let time = 0;
+
+/* ---------- sampling ---------- */
+// Draw the word into a canvas shrunk by one cell per pixel, so every pixel's
+// alpha is that cell's ink coverage. Coverage doubles as the dot's weight.
+const sampler = document.createElement("canvas");
+const sctx = sampler.getContext("2d", { willReadFrequently:true });
+
+function sampleTargets(word){
+  const cell = S.cell;
+  const cols = Math.max(1, Math.floor(W / cell));
+  const rows = Math.max(1, Math.floor(H / cell));
+  sampler.width = cols; sampler.height = rows;
+  sctx.setTransform(1,0,0,1,0,0);
+  sctx.clearRect(0,0,cols,rows);
+  if (!word) return [];
+
+  sctx.setTransform(1/cell,0,0,1/cell,0,0);
+  sctx.textAlign = "center";
+  sctx.textBaseline = "middle";
+
+  // binary-free fit: measure once at a probe size, then scale to the target box
+  const probe = 100;
+  sctx.font = probe + 'px ' + S.font;
+  const m = sctx.measureText(word);
+  const wProbe = Math.max(1, m.width);
+  const hProbe = (m.actualBoundingBoxAscent || probe*0.72) + (m.actualBoundingBoxDescent || probe*0.2);
+  let size = Math.min(probe * (W*S.fit) / wProbe, probe * (H*S.fit) / Math.max(1,hProbe));
+  size = clamp(size, 8, 4000);
+
+  sctx.font = size + 'px ' + S.font;
+  const m2 = sctx.measureText(word);
+  const asc = m2.actualBoundingBoxAscent || size*0.72;
+  const desc = m2.actualBoundingBoxDescent || size*0.2;
+  sctx.fillStyle = "#fff";
+  sctx.fillText(word, W/2, H/2 + (asc - desc)/2);
+
+  const data = sctx.getImageData(0,0,cols,rows).data;
+  const out = [];
+  for (let r=0; r<rows; r++){
+    for (let c=0; c<cols; c++){
+      const a = data[(r*cols + c)*4 + 3] / 255;
+      if (a > 0.32) out.push({ x:(c+0.5)*cell, y:(r+0.5)*cell, w:clamp(a*1.15, 0, 1) });
+    }
+  }
+  return out;
+}
+
+/* ---------- morph assignment ----------
+   Every target claims the nearest unclaimed dot, so pixels shared between two
+   words stay put and only the difference travels. */
+function retarget(){
+  const targets = sampleTargets(S.words[S.wordIndex] || "");
+  const bs = Math.max(S.cell * 3, 18);
+  const buckets = new Map();
+  const key = (x,y) => ((x/bs)|0) + ":" + ((y/bs)|0);
+
+  for (const d of dots){
+    d.taken = false;
+    if (d.dying) continue;
+    const k = key(d.x, d.y);
+    let b = buckets.get(k);
+    if (!b) buckets.set(k, b = []);
+    b.push(d);
+  }
+
+  const take = (x,y) => {
+    const bx = (x/bs)|0, by = (y/bs)|0;
+    for (let ring=0; ring<=5; ring++){
+      let best = null, bestD = Infinity, bestB = null, bestI = -1;
+      for (let ox=-ring; ox<=ring; ox++){
+        for (let oy=-ring; oy<=ring; oy++){
+          if (ring > 0 && Math.abs(ox) !== ring && Math.abs(oy) !== ring) continue;
+          const b = buckets.get((bx+ox) + ":" + (by+oy));
+          if (!b) continue;
+          for (let i=0; i<b.length; i++){
+            const d = b[i];
+            const dd = (d.x-x)*(d.x-x) + (d.y-y)*(d.y-y);
+            if (dd < bestD){ bestD = dd; best = d; bestB = b; bestI = i; }
+          }
+        }
+      }
+      if (best){ bestB.splice(bestI,1); return best; }
+    }
+    return null;
+  };
+
+  const scatter = S.morph.on ? S.morph.scatter : 0;
+  for (const t of targets){
+    const d = take(t.x, t.y);
+    if (d){
+      d.tx = t.x; d.ty = t.y; d.ts = t.w; d.taken = true; d.dying = false;
+    } else {
+      const a = Math.random() * Math.PI * 2;
+      const r = scatter * (0.4 + Math.random() * 0.9);
+      dots.push({
+        x: t.x + Math.cos(a)*r, y: t.y + Math.sin(a)*r,
+        vx:0, vy:0, s:0, ts:t.w, tx:t.x, ty:t.y,
+        ox:0, oy:0, taken:true, dying:false
+      });
+    }
+  }
+
+  for (const d of dots){
+    if (d.taken || d.dying) continue;
+    d.dying = true; d.ts = 0;
+    const a = Math.random() * Math.PI * 2;
+    d.vx += Math.cos(a) * scatter * 0.05;
+    d.vy += Math.sin(a) * scatter * 0.05;
+  }
+
+  if (!S.morph.on){
+    // hard cut: everything lands instantly
+    for (let i=dots.length-1; i>=0; i--){
+      const d = dots[i];
+      if (d.dying){ dots.splice(i,1); continue; }
+      d.x = d.tx; d.y = d.ty; d.vx = d.vy = 0; d.s = d.ts;
+    }
+  }
+}
+
+/* ---------- loop ---------- */
+let last = performance.now();
+
+function frame(now){
+  let dt = (now - last) / 16.6667;
+  last = now;
+  dt = clamp(dt, 0.2, 3);
+  time += dt;
+
+  // word cycling
+  if (S.words.length > 1 && S.morph.cycle > 0){
+    S.wordTimer += dt / 60;
+    if (S.wordTimer >= S.morph.cycle){ S.wordTimer = 0; nextWord(); }
+  }
+
+  // pointer smoothing gives the repel a bit of drag
+  pointer.sx += (pointer.x - pointer.sx) * S.repel.lag * dt;
+  pointer.sy += (pointer.y - pointer.sy) * S.repel.lag * dt;
+
+  const k = S.morph.on ? S.morph.k : 1;
+  const damp = Math.pow(S.morph.damp, dt);
+  const rOn = S.repel.on && pointer.inside;
+  const rR = S.repel.r;
+  const rF = S.repel.f * (pointer.down ? 2.1 : 1);
+  const wOn = S.wave.on;
+  const wk = (Math.PI * 2) / S.wave.len;
+  const wca = Math.cos(S.wave.angle * Math.PI/180);
+  const wsa = Math.sin(S.wave.angle * Math.PI/180);
+  const wPhase = time * S.wave.speed * 0.12;
+  const amp = S.wave.amp;
+
+  ctx.fillStyle = "#0B0B0D";
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle = S.colour;
+
+  const base = S.cell * S.dotScale * 0.5;
+
+  for (let i=dots.length-1; i>=0; i--){
+    const d = dots[i];
+
+    d.vx = (d.vx + (d.tx - d.x) * k * dt) * damp;
+    d.vy = (d.vy + (d.ty - d.y) * k * dt) * damp;
+    d.x += d.vx * dt;
+    d.y += d.vy * dt;
+    d.s += (d.ts - d.s) * clamp(0.16 * dt, 0, 1);
+
+    if (d.dying && d.s < 0.02){ dots.splice(i,1); continue; }
+
+    let px = d.x, py = d.y;
+    if (rOn){
+      const dx = px - pointer.sx, dy = py - pointer.sy;
+      const dist = Math.hypot(dx, dy);
+      if (dist < rR && dist > 0.001){
+        const t = 1 - dist / rR;
+        const push = t * t * rF;
+        px += (dx / dist) * push;
+        py += (dy / dist) * push;
+      }
+    }
+
+    let mul = 1, alpha = d.s;
+    if (wOn && amp > 0){
+      const w = Math.sin((d.x * wca + d.y * wsa) * wk - wPhase);
+      mul = 1 + amp * w * 0.85;
+      alpha *= clamp(1 + amp * w * 0.55, 0.12, 1);
+      if (mul < 0) mul = 0;
+    }
+
+    const r = base * d.s * mul;
+    if (r < 0.18 || alpha < 0.012) continue;
+
+    ctx.globalAlpha = alpha > 1 ? 1 : alpha;
+    if (S.shape === "square"){
+      ctx.fillRect(px - r, py - r, r*2, r*2);
+    } else if (S.shape === "diamond"){
+      ctx.beginPath();
+      ctx.moveTo(px, py - r); ctx.lineTo(px + r, py);
+      ctx.lineTo(px, py + r); ctx.lineTo(px - r, py);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  ctx.globalAlpha = 1;
+  requestAnimationFrame(frame);
+}
+
+function nextWord(){
+  S.wordIndex = (S.wordIndex + 1) % S.words.length;
+  retarget();
+}
+
+/* ---------- sizing ---------- */
+function resize(){
+  const rect = stage.getBoundingClientRect();
+  W = Math.max(1, Math.round(rect.width));
+  H = Math.max(1, Math.round(rect.height));
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  retarget();
+}
+new ResizeObserver(resize).observe(stage);
+
+/* ---------- pointer ---------- */
+canvas.addEventListener("pointermove", e => {
+  const r = canvas.getBoundingClientRect();
+  pointer.x = e.clientX - r.left;
+  pointer.y = e.clientY - r.top;
+  if (!pointer.inside){ pointer.sx = pointer.x; pointer.sy = pointer.y; pointer.inside = true; }
+});
+canvas.addEventListener("pointerleave", () => { pointer.inside = false; pointer.down = false; });
+canvas.addEventListener("pointerdown", e => { pointer.down = true; canvas.setPointerCapture(e.pointerId); });
+addEventListener("pointerup", () => { pointer.down = false; });
+addEventListener("keydown", e => {
+  if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT"){
+    e.preventDefault(); S.wordTimer = 0; nextWord();
+  }
+});
+
+/* ---------- controls ---------- */
+function bindRange(id, outId, apply, fmt){
+  const el = $(id), out = $(outId);
+  const run = () => { const v = +el.value; apply(v); out.textContent = fmt(v); };
+  el.addEventListener("input", run);
+  run();
+}
+const pct = v => (v/100).toFixed(2);
+
+function setWords(str){
+  const list = str.split(",").map(s => s.trim()).filter(Boolean);
+  S.words = list.length ? list : [""];
+  S.wordIndex = Math.min(S.wordIndex, S.words.length - 1);
+  S.wordTimer = 0;
+  retarget();
+}
+$("text").addEventListener("input", e => setWords(e.target.value));
+$("font").addEventListener("change", async e => {
+  S.font = e.target.value;
+  try { await document.fonts.load('100px ' + S.font); } catch {}
+  retarget();
+});
+$("shape").addEventListener("change", e => { S.shape = e.target.value; });
+
+bindRange("fit","fitOut", v => { S.fit = v/100; retarget(); }, v => v + "%");
+bindRange("cell","cellOut", v => { S.cell = v; retarget(); }, v => String(v));
+bindRange("dot","dotOut", v => { S.dotScale = v/100; }, v => v + "%");
+
+bindRange("morphSpeed","morphSpeedOut", v => { S.morph.k = v/100; }, pct);
+bindRange("morphDamp","morphDampOut", v => { S.morph.damp = v/100; }, pct);
+bindRange("morphScatter","morphScatterOut", v => { S.morph.scatter = v; }, String);
+bindRange("cycle","cycleOut", v => { S.morph.cycle = v; }, v => v ? v.toFixed(1) + "s" : "off");
+
+bindRange("repelR","repelROut", v => { S.repel.r = v; }, String);
+bindRange("repelF","repelFOut", v => { S.repel.f = v; }, String);
+bindRange("repelLag","repelLagOut", v => { S.repel.lag = v/100; }, pct);
+
+bindRange("waveAmp","waveAmpOut", v => { S.wave.amp = v/100; }, pct);
+bindRange("waveLen","waveLenOut", v => { S.wave.len = v; }, String);
+bindRange("waveSpeed","waveSpeedOut", v => { S.wave.speed = v/100; }, pct);
+bindRange("waveAngle","waveAngleOut", v => { S.wave.angle = v; }, v => v + "°");
+
+function bindToggle(id, modId, apply){
+  const el = $(id), mod = $(modId);
+  const run = () => { apply(el.checked); mod.classList.toggle("on", el.checked);
+    mod.querySelectorAll("input[type=range]").forEach(r => r.disabled = !el.checked); };
+  el.addEventListener("change", run); run();
+}
+bindToggle("morphOn","modMorph", on => { S.morph.on = on; });
+bindToggle("repelOn","modRepel", on => { S.repel.on = on; });
+bindToggle("waveOn","modWave", on => { S.wave.on = on; });
+
+const PALETTE = ["#FFB020","#F2F0EA","#4ADE80","#5B9BFF","#FF5C4D","#C77DFF"];
+const sw = $("swatches");
+PALETTE.forEach(hex => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "swatch"; b.style.background = hex;
+  b.setAttribute("aria-label", "Dot colour " + hex);
+  b.setAttribute("aria-pressed", String(hex === S.colour));
+  b.addEventListener("click", () => {
+    S.colour = hex;
+    sw.querySelectorAll(".swatch").forEach(x => x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true");
+  });
+  sw.appendChild(b);
+});
+
+/* ---------- go ---------- */
+if (reduced){ $("waveOn").checked = false; $("waveOn").dispatchEvent(new Event("change")); }
+setWords($("text").value);
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { resize(); });
+resize();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
