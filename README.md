@@ -1,10 +1,15 @@
-# Oddgrid — Pixel Type
+# Oddgrid
+
+Small tools, made as needed. `index.html` lists them.
+
+## Pixel Type
 
 A tool that renders a source onto a grid of dots and animates it. The source is
 either **text** or an **uploaded image**; both are sampled the same way, so the
 motion applies to either, and the grid morphs between them.
 
-Open `index.html` — no build step, no dependencies.
+`index.html` is the home page — a list of the tools. Open it, or open a tool
+directly. No build step, no dependencies.
 
 ## Getting it onto a page
 
@@ -65,10 +70,12 @@ motion to read.
 
 ## Layout
 
-- `oddgrid.js` — the engine. One self-contained function on purpose: the studio
-  exports a standalone embed by stringifying it, so it must not reference anything
-  outside itself.
-- `index.html` — the studio: controls, image loading, export.
+- `index.html` — the home page: a list of links, nothing else. Adding a tool is
+  one `<li>`.
+- `pixel-type.html` — the Pixel Type studio: controls, image loading, export.
+- `oddgrid.js` — the engine behind Pixel Type. One self-contained function on
+  purpose: the studio exports a standalone embed by stringifying it, so it must
+  not reference anything outside itself.
 - `.github/workflows/pages.yml` — publishes the repo to GitHub Pages. One-time
   setup: repo Settings → Pages → Source: **GitHub Actions**. The workflow token
   can't switch that on itself; after that every push deploys.

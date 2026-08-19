@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oddgrid Pixel Type</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'">
+<style>
+:root{
+  --ground:#0B0B0D;
+  --panel:#131317;
+  --panel-2:#191920;
+  --line:#25252C;
+  --line-soft:#1D1D23;
+  --ink:#E6E5E1;
+  --ink-dim:#8B8B95;
+  --ink-faint:#5C5C66;
+  --amber:#FFB020;
+  --amber-soft:rgba(255,176,32,.14);
+  --mono:"DM Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:6px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--ground);color:var(--ink);
+  font-family:var(--mono);font-size:13px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+.app{
+  height:100dvh;display:grid;grid-template-columns:1fr 328px;
+  grid-template-rows:auto 1fr;gap:1px;background:var(--line-soft);
+}
+.topbar{
+  grid-column:1/-1;background:var(--ground);display:flex;align-items:center;
+  justify-content:space-between;gap:16px;padding:14px 20px;
+}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand b{font-weight:500;letter-spacing:.22em;text-transform:uppercase;font-size:12px}
+.brand span{color:var(--ink-faint);letter-spacing:.06em;font-size:11px}
+.hint{color:var(--ink-faint);font-size:11px;letter-spacing:.04em}
+.hint em{color:var(--amber);font-style:normal}
+
+.stage{background:var(--ground);position:relative;overflow:hidden;cursor:crosshair}
+.drophint{
+  position:absolute;inset:12px;border:1px dashed var(--line);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-faint);font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  opacity:0;pointer-events:none;transition:opacity .15s;background:rgba(11,11,13,.72);
+}
+.stage.empty .drophint{opacity:1}
+.stage.dragging .drophint{opacity:1;border-color:var(--amber);color:var(--amber)}
+
+.rail{background:var(--ground);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:1px}
+.mod{background:var(--panel);padding:14px 16px 16px}
+.mod-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.mod h2{margin:0;font-size:10px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-dim)}
+.mod.on h2{color:var(--amber)}
+.ctrls{display:flex;flex-direction:column;gap:11px}
+
+.ctl{display:grid;grid-template-columns:78px 1fr 40px;align-items:center;gap:10px}
+.ctl .k{color:var(--ink-faint);font-size:11px;letter-spacing:.04em}
+.ctl output{color:var(--ink-dim);font-size:11px;text-align:right;font-variant-numeric:tabular-nums}
+.ctl.wide{grid-template-columns:1fr}
+.ctl .span2{grid-column:2/-1}
+.row{display:flex;gap:6px;align-items:center}
+.row select{flex:0 0 62px}
+.row .btn{flex:1}
+
+input[type=text]{
+  width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+  font:inherit;font-size:13px;padding:9px 11px;border-radius:var(--r);letter-spacing:.03em;
+}
+input[type=text]:focus-visible,select:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+.field-note{color:var(--ink-faint);font-size:10.5px;margin-top:7px;letter-spacing:.03em}
+.field-note.live{margin-top:0;color:var(--ink-dim)}
+
+select{
+  width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+  font:inherit;font-size:12px;padding:7px 9px;border-radius:var(--r);
+}
+
+.btn{
+  background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+  font:inherit;font-size:11.5px;padding:7px 10px;border-radius:var(--r);cursor:pointer;
+  transition:border-color .15s,color .15s,background .15s;white-space:nowrap;
+}
+.btn:hover:not(:disabled){border-color:var(--amber);color:var(--amber)}
+.btn:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.busy{border-color:var(--amber);color:var(--amber)}
+
+textarea{
+  width:100%;height:110px;resize:vertical;background:var(--panel-2);
+  border:1px solid var(--line);border-radius:var(--r);color:var(--ink-dim);
+  font:inherit;font-size:10.5px;line-height:1.4;padding:9px 10px;
+}
+textarea:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line);border-radius:2px}
+input[type=range]::-moz-range-track{height:2px;background:var(--line);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
+  background:var(--ink-dim);margin-top:-4.5px;border:0;transition:background .15s;
+}
+input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:var(--ink-dim);border:0}
+.mod.on input[type=range]::-webkit-slider-thumb{background:var(--amber)}
+.mod.on input[type=range]::-moz-range-thumb{background:var(--amber)}
+input[type=range]:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:2px}
+input[type=range]:disabled{opacity:.35}
+
+.sw{position:relative;display:inline-flex;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.sw span{width:32px;height:18px;border-radius:9px;background:var(--panel-2);border:1px solid var(--line);display:block;position:relative;transition:.18s}
+.sw span::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--ink-faint);transition:.18s}
+.sw input:checked + span{background:var(--amber-soft);border-color:rgba(255,176,32,.5)}
+.sw input:checked + span::after{transform:translateX(14px);background:var(--amber)}
+.sw input:focus-visible + span{outline:2px solid var(--amber);outline-offset:2px}
+.sw.mini span{width:28px;height:16px}
+.sw.mini span::after{width:10px;height:10px}
+.sw.mini input:checked + span::after{transform:translateX(12px)}
+
+.seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);padding:2px;gap:2px}
+.seg button{
+  flex:1;background:none;border:0;color:var(--ink-faint);font:inherit;font-size:11px;
+  letter-spacing:.12em;text-transform:uppercase;padding:6px 4px;border-radius:4px;cursor:pointer;
+  transition:background .15s,color .15s;
+}
+.seg button[aria-selected=true]{background:var(--amber-soft);color:var(--amber)}
+.seg button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+
+.drop{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--panel-2);border:1px dashed var(--line);border-radius:var(--r);
+  padding:11px;color:var(--ink-dim);font:inherit;font-size:11.5px;cursor:pointer;
+  transition:border-color .15s,color .15s;
+}
+.drop:hover,.drop:focus-visible{border-color:var(--amber);color:var(--ink);outline:none}
+.drop .thumb{width:40px;height:40px;flex:none;border-radius:4px;background:#0E0E11 center/contain no-repeat;border:1px solid var(--line)}
+.drop .lbl{min-width:0}
+.drop .lbl b{display:block;font-weight:400;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drop .lbl i{font-style:normal;color:var(--ink-faint);font-size:10.5px}
+.hidden{display:none !important}
+
+.swatches{display:flex;gap:6px;align-items:center}
+.swatch{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);padding:0;cursor:pointer;transition:transform .12s}
+.swatch.custom{-webkit-appearance:none;appearance:none;background:none;overflow:hidden}
+.swatch.custom::-webkit-color-swatch-wrapper{padding:0}
+.swatch.custom::-webkit-color-swatch{border:none;border-radius:50%}
+.swatch.custom::-moz-color-swatch{border:none;border-radius:50%}
+.hexval{color:var(--ink-dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+#customRow.muted{opacity:.3;pointer-events:none}
+.swatch:hover{transform:scale(1.12)}
+.swatch[aria-pressed=true]{box-shadow:0 0 0 2px var(--panel),0 0 0 3px var(--amber)}
+.swatch:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.swatches.muted{opacity:.3;pointer-events:none}
+
+.foot{padding:14px 16px 22px;color:var(--ink-faint);font-size:10.5px;letter-spacing:.03em;background:var(--panel)}
+.foot kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--ink-dim);font:inherit;font-size:10px}
+
+@media (max-width:880px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto 46vh 1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .sw span,.sw span::after,.seg button,.btn{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><b>Oddgrid</b><span>pixel type</span></div>
+    <div class="hint">move the pointer over the grid — <em>hold to push harder</em></div>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="drophint">choose or drop an image</div>
+  </main>
+
+  <aside class="rail">
+
+    <section class="mod on">
+      <div class="mod-head"><h2>Source</h2></div>
+      <div class="ctrls">
+        <div class="ctl wide">
+          <div class="seg" role="tablist" aria-label="Source">
+            <button type="button" id="tabText" role="tab" aria-selected="true">Text</button>
+            <button type="button" id="tabImage" role="tab" aria-selected="false">Image</button>
+          </div>
+        </div>
+
+        <div id="panelText" class="ctrls">
+          <div class="ctl wide">
+            <input type="text" id="text" value="ODDGRID, MOTION, PIXEL, TYPE" autocomplete="off" spellcheck="false" aria-label="Text">
+            <div class="field-note">Separate with commas to cycle through words.</div>
+          </div>
+          <div class="ctl"><span class="k">Face</span>
+            <select id="font" class="span2">
+              <option value='"Archivo Black",Impact,sans-serif'>Archivo Black</option>
+              <option value='Georgia,"Times New Roman",serif'>Georgia</option>
+              <option value='"DM Mono",monospace'>DM Mono</option>
+              <option value='Helvetica,Arial,sans-serif'>Helvetica</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="panelImage" class="ctrls hidden">
+          <div class="ctl wide">
+            <button type="button" class="drop" id="drop">
+              <span class="thumb" id="thumb"></span>
+              <span class="lbl"><b id="fileName">Choose an image</b><i id="fileMeta">PNG, JPG, SVG, GIF — or drop one on the grid</i></span>
+            </button>
+            <input type="file" id="file" accept="image/*" class="hidden">
+          </div>
+          <div class="ctl"><span class="k">Read</span>
+            <select id="read" class="span2">
+              <option value="alpha">Shape (transparency)</option>
+              <option value="bright">Light areas</option>
+              <option value="dark">Dark areas</option>
+            </select>
+          </div>
+          <label class="ctl"><span class="k">Cutoff</span>
+            <input type="range" id="cut" min="0" max="90" value="14"><output id="cutOut">0.14</output>
+          </label>
+          <label class="ctl"><span class="k">Contrast</span>
+            <input type="range" id="gain" min="40" max="260" value="100"><output id="gainOut">1.00</output>
+          </label>
+          <div class="ctl"><span class="k">Its colours</span>
+            <div class="span2 row">
+              <label class="sw mini"><input type="checkbox" id="imgColour" aria-label="Use the image's own colours"><span></span></label>
+            </div>
+          </div>
+        </div>
+
+        <label class="ctl"><span class="k">Fill</span>
+          <input type="range" id="fit" min="30" max="96" value="78"><output id="fitOut">78%</output>
+        </label>
+      </div>
+    </section>
+
+    <section class="mod on">
+      <div class="mod-head"><h2>Grid</h2></div>
+      <div class="ctrls">
+        <label class="ctl"><span class="k">Cell</span>
+          <input type="range" id="cell" min="5" max="26" value="11"><output id="cellOut">11</output>
+        </label>
+        <label class="ctl"><span class="k">Dot size</span>
+          <input type="range" id="dot" min="20" max="130" value="82"><output id="dotOut">82%</output>
+        </label>
+        <div class="ctl"><span class="k">Shape</span>
+          <select id="shape" class="span2">
+            <option value="square">Square</option>
+            <option value="circle" selected>Circle</option>
+            <option value="diamond">Diamond</option>
+          </select>
+        </div>
+        <div class="ctl"><span class="k">Colour</span>
+          <div class="swatches span2" id="swatches"></div>
+        </div>
+        <div class="ctl" id="customRow"><span class="k">Custom</span>
+          <div class="span2 row">
+            <input type="color" id="custom" class="swatch custom" value="#FFB020" aria-label="Custom dot colour">
+            <span class="hexval" id="customHex">#FFB020</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="mod on" id="modMorph">
+      <div class="mod-head"><h2>Morph</h2>
+        <label class="sw"><input type="checkbox" id="morphOn" checked aria-label="Morph"><span></span></label>
+      </div>
+      <div class="ctrls">
+        <label class="ctl"><span class="k">Travel</span><input type="range" id="morphSpeed" min="4" max="60" value="20"><output id="morphSpeedOut">0.20</output></label>
+        <label class="ctl"><span class="k">Settle</span><input type="range" id="morphDamp" min="55" max="95" value="76"><output id="morphDampOut">0.76</output></label>
+        <label class="ctl"><span class="k">Scatter</span><input type="range" id="morphScatter" min="0" max="240" value="70"><output id="morphScatterOut">70</output></label>
+        <label class="ctl"><span class="k">Cycle</span><input type="range" id="cycle" min="0" max="8" step="0.5" value="2.5"><output id="cycleOut">2.5s</output></label>
+      </div>
+    </section>
+
+    <section class="mod on" id="modRepel">
+      <div class="mod-head"><h2>Repel</h2>
+        <label class="sw"><input type="checkbox" id="repelOn" checked aria-label="Repel"><span></span></label>
+      </div>
+      <div class="ctrls">
+        <label class="ctl"><span class="k">Radius</span><input type="range" id="repelR" min="40" max="420" value="170"><output id="repelROut">170</output></label>
+        <label class="ctl"><span class="k">Force</span><input type="range" id="repelF" min="-120" max="160" value="70"><output id="repelFOut">70</output></label>
+        <label class="ctl"><span class="k">Lag</span><input type="range" id="repelLag" min="4" max="40" value="16"><output id="repelLagOut">0.16</output></label>
+      </div>
+    </section>
+
+    <section class="mod on" id="modWave">
+      <div class="mod-head"><h2>Wave</h2>
+        <label class="sw"><input type="checkbox" id="waveOn" checked aria-label="Wave"><span></span></label>
+      </div>
+      <div class="ctrls">
+        <label class="ctl"><span class="k">Amount</span><input type="range" id="waveAmp" min="0" max="100" value="46"><output id="waveAmpOut">0.46</output></label>
+        <label class="ctl"><span class="k">Length</span><input type="range" id="waveLen" min="40" max="700" value="240"><output id="waveLenOut">240</output></label>
+        <label class="ctl"><span class="k">Speed</span><input type="range" id="waveSpeed" min="0" max="100" value="34"><output id="waveSpeedOut">0.34</output></label>
+        <label class="ctl"><span class="k">Angle</span><input type="range" id="waveAngle" min="0" max="359" value="28"><output id="waveAngleOut">28°</output></label>
+      </div>
+    </section>
+
+    <section class="mod on" id="modExport">
+      <div class="mod-head"><h2>Embed</h2></div>
+      <div class="ctrls">
+        <div class="ctl wide">
+          <div class="row">
+            <button type="button" class="btn" id="copyEmbed">Copy code</button>
+            <button type="button" class="btn" id="saveEmbed">Save file</button>
+          </div>
+        </div>
+        <div class="ctl wide"><div class="field-note live" id="exportNote">Carries your current settings, runs on its own, and draws on a transparent background.</div></div>
+        <div class="ctl wide hidden" id="codeWrap">
+          <textarea id="code" readonly spellcheck="false" aria-label="Embed code"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <div class="foot">Press <kbd>Space</kbd> to advance the word. Paste or drop an image anywhere to switch to image mode.</div>
+  </aside>
+</div>
+
+<script src="oddgrid.js"></script>
+<script>
+(() => {
+"use strict";
+
+const $ = id => document.getElementById(id);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const stage = $("stage");
+
+const S = {
+  mode:"text",
+  words:["ODDGRID"],
+  font:'"Archivo Black",Impact,sans-serif',
+  read:"alpha", cut:0.14, gain:1, imgColour:false,
+  fit:0.78, cell:11, dotScale:0.82, shape:"circle",
+  colour:"#FFB020",
+  morph:{ on:true, k:0.20, damp:0.76, scatter:70, cycle:2.5 },
+  repel:{ on:true, r:170, f:70, lag:0.16 },
+  wave:{ on:!reduced, amp:0.46, len:240, speed:0.34, angle:28 }
+};
+
+// bg stays out of S: the canvas is transparent and .stage paints the ground,
+// so what you see is what an embed puts on your own page.
+const GROUND = "#0B0B0D";
+const engine = OddgridEngine(stage, S);
+const push = patch => { Object.assign(S, patch); engine.set(patch); };
+
+/* ---------- controls ---------- */
+function bindRange(id, outId, apply, fmt){
+  const el = $(id), out = $(outId);
+  const run = () => { const v = +el.value; apply(v); out.textContent = fmt(v); };
+  el.addEventListener("input", run);
+  run();
+}
+const pct = v => (v/100).toFixed(2);
+// bindRange hands the apply function the raw slider value; scale converts it to
+// the unit the engine wants, which is not always the unit the label shows.
+const sub = (group, key, scale) => v => {
+  const val = scale ? v * scale : v;
+  S[group][key] = val;
+  engine.set({ [group]:{ [key]:val } });
+};
+
+function setMode(mode){
+  const isText = mode === "text";
+  $("tabText").setAttribute("aria-selected", String(isText));
+  $("tabImage").setAttribute("aria-selected", String(!isText));
+  $("panelText").classList.toggle("hidden", !isText);
+  $("panelImage").classList.toggle("hidden", isText);
+  stage.classList.toggle("empty", !isText && !engine.imageInfo());
+  push({ mode });
+  syncColourUI();
+}
+$("tabText").addEventListener("click", () => setMode("text"));
+$("tabImage").addEventListener("click", () => setMode("image"));
+
+function setWords(str){
+  const list = str.split(",").map(s => s.trim()).filter(Boolean);
+  push({ words: list.length ? list : [""] });
+}
+$("text").addEventListener("input", e => setWords(e.target.value));
+$("font").addEventListener("change", async e => {
+  const font = e.target.value;
+  try { await document.fonts.load('100px ' + font); } catch (err) {}
+  push({ font });
+});
+$("shape").addEventListener("change", e => push({ shape:e.target.value }));
+$("read").addEventListener("change", e => push({ read:e.target.value }));
+
+function syncColourUI(){
+  const off = S.mode === "image" && S.imgColour;
+  $("swatches").classList.toggle("muted", off);
+  $("customRow").classList.toggle("muted", off);
+}
+$("imgColour").addEventListener("change", e => {
+  push({ imgColour:e.target.checked });
+  syncColourUI();
+});
+
+bindRange("fit","fitOut", v => push({ fit:v/100 }), v => v + "%");
+bindRange("cut","cutOut", v => push({ cut:v/100 }), pct);
+bindRange("gain","gainOut", v => push({ gain:v/100 }), pct);
+bindRange("cell","cellOut", v => push({ cell:v }), String);
+bindRange("dot","dotOut", v => push({ dotScale:v/100 }), v => v + "%");
+
+bindRange("morphSpeed","morphSpeedOut", sub("morph","k",0.01), pct);
+bindRange("morphDamp","morphDampOut", sub("morph","damp",0.01), pct);
+bindRange("morphScatter","morphScatterOut", sub("morph","scatter"), String);
+bindRange("cycle","cycleOut", sub("morph","cycle"), v => v ? v.toFixed(1) + "s" : "off");
+
+bindRange("repelR","repelROut", sub("repel","r"), String);
+bindRange("repelF","repelFOut", sub("repel","f"), String);
+bindRange("repelLag","repelLagOut", sub("repel","lag",0.01), pct);
+
+bindRange("waveAmp","waveAmpOut", sub("wave","amp",0.01), pct);
+bindRange("waveLen","waveLenOut", sub("wave","len"), String);
+bindRange("waveSpeed","waveSpeedOut", sub("wave","speed",0.01), pct);
+bindRange("waveAngle","waveAngleOut", sub("wave","angle"), v => v + "°");
+
+function bindToggle(id, modId, group){
+  const el = $(id), mod = $(modId);
+  const run = () => {
+    S[group].on = el.checked;
+    engine.set({ [group]:{ on:el.checked } });
+    mod.classList.toggle("on", el.checked);
+    mod.querySelectorAll("input[type=range]").forEach(r => r.disabled = !el.checked);
+  };
+  el.addEventListener("change", run); run();
+}
+bindToggle("morphOn","modMorph","morph");
+bindToggle("repelOn","modRepel","repel");
+bindToggle("waveOn","modWave","wave");
+
+const PALETTE = ["#FFB020","#F2F0EA","#4ADE80","#5B9BFF","#FF5C4D","#C77DFF"];
+const sw = $("swatches");
+const custom = $("custom");
+
+function pickColour(hex, pressed){
+  push({ colour:hex });
+  custom.value = hex;
+  $("customHex").textContent = hex.toUpperCase();
+  sw.querySelectorAll(".swatch").forEach(x => x.setAttribute("aria-pressed","false"));
+  if (pressed) pressed.setAttribute("aria-pressed","true");
+}
+
+PALETTE.forEach(hex => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "swatch"; b.style.background = hex;
+  b.setAttribute("aria-label", "Dot colour " + hex);
+  b.setAttribute("aria-pressed", String(hex === S.colour));
+  b.addEventListener("click", () => pickColour(hex, b));
+  sw.appendChild(b);
+});
+
+custom.addEventListener("input", () => pickColour(custom.value, null));
+
+addEventListener("keydown", e => {
+  const t = e.target.tagName;
+  if (e.code === "Space" && t !== "INPUT" && t !== "SELECT" && t !== "BUTTON" && t !== "TEXTAREA"){
+    e.preventDefault();
+    if (S.mode === "text") engine.next();
+  }
+});
+
+/* ---------- image loading ---------- */
+function setSlider(id, v){
+  const el = $(id);
+  el.value = v;
+  el.dispatchEvent(new Event("input"));
+}
+
+function loadImage(file){
+  if (!file) return;
+  if (!/^image\//.test(file.type)){
+    $("fileName").textContent = "That isn't an image";
+    $("fileMeta").textContent = "Try a PNG, JPG, GIF or SVG";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    engine.setImage(reader.result, info => {
+      if (!info){
+        $("fileName").textContent = "Couldn't read that file";
+        $("fileMeta").textContent = "Try a PNG, JPG, GIF or SVG";
+        return;
+      }
+      $("thumb").style.backgroundImage = "url(" + info.buffer.toDataURL() + ")";
+      $("fileName").textContent = file.name;
+      $("fileMeta").textContent = info.width + " × " + info.height;
+
+      // an icon with real transparency reads as a shape; anything opaque is a
+      // photo, which needs a lower floor and more contrast to hold its midtones
+      $("read").value = info.alpha ? "alpha" : "bright";
+      push({ read: info.alpha ? "alpha" : "bright" });
+      setSlider("cut", info.alpha ? 14 : 6);
+      setSlider("gain", info.alpha ? 100 : 155);
+      setMode("image");
+      noteEmbedSize();
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+$("file").addEventListener("change", e => loadImage(e.target.files[0]));
+$("drop").addEventListener("click", () => $("file").click());
+["dragenter","dragover"].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.add("dragging"); }));
+["dragleave","drop"].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.remove("dragging"); }));
+stage.addEventListener("drop", e => { if (e.dataTransfer && e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]); });
+addEventListener("paste", e => {
+  const files = e.clipboardData && e.clipboardData.files;
+  if (files && files[0]) loadImage(files[0]);
+});
+
+/* ---------- export ---------- */
+const note = msg => { $("exportNote").textContent = msg; };
+
+// Published artifacts hand files to the viewer through the downloads capability;
+// everywhere else an anchor does it.
+async function saveFile(filename, data){
+  try {
+    const dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null;
+    if (dl){
+      await dl.save({ filename, data });
+      return "saved";
+    }
+  } catch (err){
+    if (err && err.code === "declined") return "declined";
+    if (err && err.code === "extension_not_enabled") return "extension";
+    if (err && err.code === "too_large") return "too_large";
+    return "failed";
+  }
+  const blob = data instanceof Blob ? data : new Blob([data], { type:"text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  return "saved";
+}
+
+function busy(btn, label){
+  btn.disabled = true; btn.classList.add("busy");
+  const original = btn.dataset.label || btn.textContent;
+  btn.dataset.label = original;
+  if (label) btn.textContent = label;
+  return () => { btn.disabled = false; btn.classList.remove("busy"); btn.textContent = original; };
+}
+
+const fmtSize = n => n > 1048576 ? (n/1048576).toFixed(1) + " MB" : Math.round(n/1024) + " KB";
+
+const GOOGLE_FACES = {
+  '"Archivo Black",Impact,sans-serif': "Archivo+Black",
+  '"DM Mono",monospace': "DM+Mono:wght@400;500"
+};
+
+// The image is re-encoded small: the grid never samples more than a few hundred
+// pixels across, so a big source would only bloat the snippet.
+function embedImage(){
+  const info = engine.imageInfo();
+  if (S.mode !== "image" || !info) return null;
+  const src = info.buffer;
+  const cap = 800, sc = Math.min(1, cap / Math.max(src.width, src.height));
+  const c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(src.width*sc));
+  c.height = Math.max(1, Math.round(src.height*sc));
+  c.getContext("2d").drawImage(src, 0, 0, c.width, c.height);
+  return info.alpha ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.82);
+}
+
+function buildEmbed(){
+  const size = engine.size();
+  const opts = {
+    mode:S.mode, words:S.words, font:S.font,
+    image:embedImage(), read:S.read, cut:S.cut, gain:S.gain, imgColour:S.imgColour,
+    fit:S.fit, cell:S.cell, dotScale:S.dotScale, shape:S.shape,
+    colour:S.colour,
+    morph:S.morph, repel:S.repel, wave:S.wave
+  };
+  const face = GOOGLE_FACES[S.font];
+  const fontLink = face
+    ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + face + '&display=swap" media="print" onload="this.media=\'all\'">\n'
+    : "";
+  return fontLink +
+    '<div id="oddgrid" style="width:100%;height:min(' + size.h + 'px,70vh)"></div>\n' +
+    "<script>\n" + OddgridEngine.toString() + "\n" +
+    "OddgridEngine(document.getElementById('oddgrid'), " + JSON.stringify(opts) + ");\n" +
+    "<\/script>";
+}
+
+function noteEmbedSize(){
+  note("About " + fmtSize(buildEmbed().length) + ". No dependencies, transparent background.");
+}
+
+$("copyEmbed").addEventListener("click", async () => {
+  const code = buildEmbed();
+  try {
+    await navigator.clipboard.writeText(code);
+    note("Copied " + fmtSize(code.length) + ". Paste it into any HTML block.");
+  } catch (err){
+    $("codeWrap").classList.remove("hidden");
+    $("code").value = code;
+    $("code").select();
+    note("Clipboard is blocked here — the code is below, ready to copy.");
+  }
+});
+
+$("saveEmbed").addEventListener("click", async () => {
+  const btn = $("saveEmbed"), done = busy(btn, "Saving…");
+  const page = "<!doctype html>\n<html><head><meta charset=\"utf-8\">" +
+    "<title>Oddgrid</title><style>html,body{margin:0;height:100%;background:" + GROUND + "}" +
+    "#oddgrid{width:100vw;height:100vh}</style></head><body>\n" +
+    buildEmbed().replace(/height:min\([^)]*\)/, "height:100%") +
+    "\n</body></html>";
+  let res = await saveFile("oddgrid.html", page);
+  if (res === "extension") res = await saveFile("oddgrid-embed.txt", page);
+  note(res === "saved" ? "Saved a standalone page — same embed on a dark ground so it stands alone."
+     : res === "declined" ? "Save cancelled."
+     : "Couldn't save the file — use Copy code instead.");
+  done();
+});
+
+/* ---------- go ---------- */
+if (reduced){ $("waveOn").checked = false; $("waveOn").dispatchEvent(new Event("change")); }
+setWords($("text").value);
+syncColourUI();
+setTimeout(noteEmbedSize, 400);
+})();
+</script>
+</body>
+</html>
