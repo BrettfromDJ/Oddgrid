@@ -44,58 +44,42 @@ body{
 .topbar{
   grid-column:1/-1;
   background:var(--ground);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
   padding:14px 20px;
 }
 .brand{display:flex;align-items:baseline;gap:10px}
-.brand b{
-  font-weight:500;
-  letter-spacing:.22em;
-  text-transform:uppercase;
-  font-size:12px;
-}
+.brand b{font-weight:500;letter-spacing:.22em;text-transform:uppercase;font-size:12px}
 .brand span{color:var(--ink-faint);letter-spacing:.06em;font-size:11px}
 .hint{color:var(--ink-faint);font-size:11px;letter-spacing:.04em}
 .hint em{color:var(--amber);font-style:normal}
 
 .stage{background:var(--ground);position:relative;overflow:hidden}
 canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
+.drophint{
+  position:absolute;inset:12px;border:1px dashed var(--line);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-faint);font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+  opacity:0;pointer-events:none;transition:opacity .15s;background:rgba(11,11,13,.72);
+}
+.stage.empty .drophint{opacity:1}
+.stage.dragging .drophint{opacity:1;border-color:var(--amber);color:var(--amber)}
 
-.rail{
-  background:var(--ground);
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  display:flex;
-  flex-direction:column;
-  gap:1px;
-}
+.rail{background:var(--ground);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:1px}
 .mod{background:var(--panel);padding:14px 16px 16px}
-.mod-head{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:12px;margin-bottom:12px;
-}
-.mod h2{
-  margin:0;font-size:10px;font-weight:500;
-  letter-spacing:.24em;text-transform:uppercase;color:var(--ink-dim);
-}
+.mod-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.mod h2{margin:0;font-size:10px;font-weight:500;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-dim)}
 .mod.on h2{color:var(--amber)}
 .ctrls{display:flex;flex-direction:column;gap:11px}
 
 .ctl{display:grid;grid-template-columns:78px 1fr 40px;align-items:center;gap:10px}
 .ctl .k{color:var(--ink-faint);font-size:11px;letter-spacing:.04em}
-.ctl output{
-  color:var(--ink-dim);font-size:11px;text-align:right;
-  font-variant-numeric:tabular-nums;
-}
+.ctl output{color:var(--ink-dim);font-size:11px;text-align:right;font-variant-numeric:tabular-nums}
 .ctl.wide{grid-template-columns:1fr}
+.ctl .span2{grid-column:2/-1}
 
 input[type=text]{
-  width:100%;background:var(--panel-2);border:1px solid var(--line);
-  color:var(--ink);font:inherit;font-size:13px;padding:9px 11px;border-radius:var(--r);
-  letter-spacing:.03em;
+  width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);
+  font:inherit;font-size:13px;padding:9px 11px;border-radius:var(--r);letter-spacing:.03em;
 }
 input[type=text]:focus-visible,select:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
 .field-note{color:var(--ink-faint);font-size:10.5px;margin-top:7px;letter-spacing:.03em}
@@ -105,18 +89,14 @@ select{
   font:inherit;font-size:12px;padding:7px 9px;border-radius:var(--r);
 }
 
-input[type=range]{
-  -webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;margin:0;
-}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:18px;background:transparent;margin:0}
 input[type=range]::-webkit-slider-runnable-track{height:2px;background:var(--line);border-radius:2px}
 input[type=range]::-moz-range-track{height:2px;background:var(--line);border-radius:2px}
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
   background:var(--ink-dim);margin-top:-4.5px;border:0;transition:background .15s;
 }
-input[type=range]::-moz-range-thumb{
-  width:11px;height:11px;border-radius:50%;background:var(--ink-dim);border:0;
-}
+input[type=range]::-moz-range-thumb{width:11px;height:11px;border-radius:50%;background:var(--ink-dim);border:0}
 .mod.on input[type=range]::-webkit-slider-thumb{background:var(--amber)}
 .mod.on input[type=range]::-moz-range-thumb{background:var(--amber)}
 input[type=range]:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:2px}
@@ -135,28 +115,50 @@ input[type=range]:disabled{opacity:.35}
 .sw input:checked + span{background:var(--amber-soft);border-color:rgba(255,176,32,.5)}
 .sw input:checked + span::after{transform:translateX(14px);background:var(--amber)}
 .sw input:focus-visible + span{outline:2px solid var(--amber);outline-offset:2px}
+.sw.mini span{width:28px;height:16px}
+.sw.mini span::after{width:10px;height:10px}
+.sw.mini input:checked + span::after{transform:translateX(12px)}
 
-.swatches{display:flex;gap:6px}
-.swatch{
-  width:22px;height:22px;border-radius:50%;border:1px solid var(--line);
-  padding:0;cursor:pointer;transition:transform .12s;
+.seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);padding:2px;gap:2px}
+.seg button{
+  flex:1;background:none;border:0;color:var(--ink-faint);font:inherit;font-size:11px;
+  letter-spacing:.12em;text-transform:uppercase;padding:6px 4px;border-radius:4px;cursor:pointer;
+  transition:background .15s,color .15s;
 }
+.seg button[aria-selected=true]{background:var(--amber-soft);color:var(--amber)}
+.seg button:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+
+.drop{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  background:var(--panel-2);border:1px dashed var(--line);border-radius:var(--r);
+  padding:11px;color:var(--ink-dim);font:inherit;font-size:11.5px;cursor:pointer;
+  transition:border-color .15s,color .15s;
+}
+.drop:hover,.drop:focus-visible{border-color:var(--amber);color:var(--ink);outline:none}
+.drop .thumb{
+  width:40px;height:40px;flex:none;border-radius:4px;background:#0E0E11 center/contain no-repeat;
+  border:1px solid var(--line);
+}
+.drop .lbl{min-width:0}
+.drop .lbl b{display:block;font-weight:400;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drop .lbl i{font-style:normal;color:var(--ink-faint);font-size:10.5px}
+.hidden{display:none !important}
+
+.swatches{display:flex;gap:6px;align-items:center}
+.swatch{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);padding:0;cursor:pointer;transition:transform .12s}
 .swatch:hover{transform:scale(1.12)}
-.swatch[aria-pressed=true]{box-shadow:0 0 0 2px var(--ground),0 0 0 3px var(--amber)}
+.swatch[aria-pressed=true]{box-shadow:0 0 0 2px var(--panel),0 0 0 3px var(--amber)}
 .swatch:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.swatches.muted{opacity:.3;pointer-events:none}
 
 .foot{padding:14px 16px 22px;color:var(--ink-faint);font-size:10.5px;letter-spacing:.03em;background:var(--panel)}
-.foot kbd{
-  background:var(--panel-2);border:1px solid var(--line);border-radius:3px;
-  padding:1px 5px;color:var(--ink-dim);font:inherit;font-size:10px;
-}
+.foot kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--ink-dim);font:inherit;font-size:10px}
 
 @media (max-width:880px){
   .app{grid-template-columns:1fr;grid-template-rows:auto 46vh 1fr}
-  .rail{max-height:none}
 }
 @media (prefers-reduced-motion:reduce){
-  .sw span,.sw span::after{transition:none}
+  .sw span,.sw span::after,.seg button{transition:none}
 }
 </style>
 </head>
@@ -164,30 +166,69 @@ input[type=range]:disabled{opacity:.35}
 <div class="app">
   <header class="topbar">
     <div class="brand"><b>Oddgrid</b><span>pixel type</span></div>
-    <div class="hint">move the pointer over the type — <em>hold to push harder</em></div>
+    <div class="hint">move the pointer over the grid — <em>hold to push harder</em></div>
   </header>
 
   <main class="stage" id="stage">
     <canvas id="c"></canvas>
+    <div class="drophint">choose or drop an image</div>
   </main>
 
   <aside class="rail">
 
     <section class="mod on">
-      <div class="mod-head"><h2>Type</h2></div>
+      <div class="mod-head"><h2>Source</h2></div>
       <div class="ctrls">
         <div class="ctl wide">
-          <input type="text" id="text" value="ODDGRID, MOTION, PIXEL, TYPE" autocomplete="off" spellcheck="false" aria-label="Text">
-          <div class="field-note">Separate with commas to cycle through words.</div>
+          <div class="seg" role="tablist" aria-label="Source">
+            <button type="button" id="tabText" role="tab" aria-selected="true">Text</button>
+            <button type="button" id="tabImage" role="tab" aria-selected="false">Image</button>
+          </div>
         </div>
-        <div class="ctl"><span class="k">Face</span>
-          <select id="font" style="grid-column:2/-1">
-            <option value='"Archivo Black",Impact,sans-serif'>Archivo Black</option>
-            <option value='Georgia,"Times New Roman",serif'>Georgia</option>
-            <option value='"DM Mono",monospace'>DM Mono</option>
-            <option value='Helvetica,Arial,sans-serif'>Helvetica</option>
-          </select>
+
+        <div id="panelText" class="ctrls">
+          <div class="ctl wide">
+            <input type="text" id="text" value="ODDGRID, MOTION, PIXEL, TYPE" autocomplete="off" spellcheck="false" aria-label="Text">
+            <div class="field-note">Separate with commas to cycle through words.</div>
+          </div>
+          <div class="ctl"><span class="k">Face</span>
+            <select id="font" class="span2">
+              <option value='"Archivo Black",Impact,sans-serif'>Archivo Black</option>
+              <option value='Georgia,"Times New Roman",serif'>Georgia</option>
+              <option value='"DM Mono",monospace'>DM Mono</option>
+              <option value='Helvetica,Arial,sans-serif'>Helvetica</option>
+            </select>
+          </div>
         </div>
+
+        <div id="panelImage" class="ctrls hidden">
+          <div class="ctl wide">
+            <button type="button" class="drop" id="drop">
+              <span class="thumb" id="thumb"></span>
+              <span class="lbl"><b id="fileName">Choose an image</b><i id="fileMeta">PNG, JPG, SVG, GIF — or drop one on the grid</i></span>
+            </button>
+            <input type="file" id="file" accept="image/*" class="hidden">
+          </div>
+          <div class="ctl"><span class="k">Read</span>
+            <select id="read" class="span2">
+              <option value="alpha">Shape (transparency)</option>
+              <option value="bright">Light areas</option>
+              <option value="dark">Dark areas</option>
+            </select>
+          </div>
+          <label class="ctl"><span class="k">Cutoff</span>
+            <input type="range" id="cut" min="0" max="90" value="14"><output id="cutOut">0.14</output>
+          </label>
+          <label class="ctl"><span class="k">Contrast</span>
+            <input type="range" id="gain" min="40" max="260" value="100"><output id="gainOut">1.00</output>
+          </label>
+          <div class="ctl"><span class="k">Its colours</span>
+            <div class="span2" style="display:flex;justify-content:flex-start">
+              <label class="sw mini"><input type="checkbox" id="imgColour" aria-label="Use the image's own colours"><span></span></label>
+            </div>
+          </div>
+        </div>
+
         <label class="ctl"><span class="k">Fill</span>
           <input type="range" id="fit" min="30" max="96" value="78"><output id="fitOut">78%</output>
         </label>
@@ -204,14 +245,14 @@ input[type=range]:disabled{opacity:.35}
           <input type="range" id="dot" min="20" max="130" value="82"><output id="dotOut">82%</output>
         </label>
         <div class="ctl"><span class="k">Shape</span>
-          <select id="shape" style="grid-column:2/-1">
+          <select id="shape" class="span2">
             <option value="square">Square</option>
             <option value="circle" selected>Circle</option>
             <option value="diamond">Diamond</option>
           </select>
         </div>
         <div class="ctl"><span class="k">Colour</span>
-          <div class="swatches" style="grid-column:2/-1" id="swatches"></div>
+          <div class="swatches span2" id="swatches"></div>
         </div>
       </div>
     </section>
@@ -273,7 +314,7 @@ input[type=range]:disabled{opacity:.35}
       </div>
     </section>
 
-    <div class="foot">Press <kbd>Space</kbd> to jump to the next word.</div>
+    <div class="foot">Press <kbd>Space</kbd> to advance the word. Paste or drop an image anywhere to switch to image mode.</div>
   </aside>
 </div>
 
@@ -289,10 +330,11 @@ const canvas = $("c");
 const ctx = canvas.getContext("2d", { alpha:false });
 const stage = $("stage");
 
-/* ---------- state ---------- */
 const S = {
+  mode:"text",
   words:["ODDGRID"], wordIndex:0, wordTimer:0,
   font:'"Archivo Black",Impact,sans-serif',
+  img:null, read:"alpha", cut:0.14, gain:1, imgColour:false,
   fit:0.78, cell:11, dotScale:0.82, shape:"circle",
   colour:"#FFB020",
   morph:{ on:true, k:0.20, damp:0.76, scatter:70, cycle:2.5 },
@@ -305,26 +347,31 @@ let dots = [];
 let pointer = { x:-9999, y:-9999, sx:-9999, sy:-9999, down:false, inside:false };
 let time = 0;
 
-/* ---------- sampling ---------- */
-// Draw the word into a canvas shrunk by one cell per pixel, so every pixel's
-// alpha is that cell's ink coverage. Coverage doubles as the dot's weight.
+/* ---------- sampling ----------
+   Everything — text or image — is drawn into a canvas shrunk by one cell per
+   pixel, so each pixel's value is that cell's coverage. That single number
+   becomes the dot's weight, which is why both sources feed the same grid. */
 const sampler = document.createElement("canvas");
 const sctx = sampler.getContext("2d", { willReadFrequently:true });
 
-function sampleTargets(word){
+function beginSample(){
   const cell = S.cell;
   const cols = Math.max(1, Math.floor(W / cell));
   const rows = Math.max(1, Math.floor(H / cell));
   sampler.width = cols; sampler.height = rows;
   sctx.setTransform(1,0,0,1,0,0);
   sctx.clearRect(0,0,cols,rows);
+  sctx.setTransform(1/cell,0,0,1/cell,0,0);
+  return { cols, rows, cell };
+}
+
+function sampleText(){
+  const { cols, rows, cell } = beginSample();
+  const word = S.words[S.wordIndex] || "";
   if (!word) return [];
 
-  sctx.setTransform(1/cell,0,0,1/cell,0,0);
   sctx.textAlign = "center";
   sctx.textBaseline = "middle";
-
-  // binary-free fit: measure once at a probe size, then scale to the target box
   const probe = 100;
   sctx.font = probe + 'px ' + S.font;
   const m = sctx.measureText(word);
@@ -345,25 +392,75 @@ function sampleTargets(word){
   for (let r=0; r<rows; r++){
     for (let c=0; c<cols; c++){
       const a = data[(r*cols + c)*4 + 3] / 255;
-      if (a > 0.32) out.push({ x:(c+0.5)*cell, y:(r+0.5)*cell, w:clamp(a*1.15, 0, 1) });
+      if (a > 0.32) out.push({ x:(c+0.5)*cell, y:(r+0.5)*cell, w:clamp(a*1.15,0,1), col:-1 });
     }
   }
   return out;
 }
 
+function sampleImage(){
+  if (!S.img) return [];
+  const { cols, rows, cell } = beginSample();
+
+  const iw = S.img.width, ih = S.img.height;
+  const sc = Math.min((W*S.fit)/iw, (H*S.fit)/ih);
+  const dw = iw*sc, dh = ih*sc;
+  sctx.imageSmoothingEnabled = true;
+  sctx.imageSmoothingQuality = "high";
+  sctx.drawImage(S.img, (W-dw)/2, (H-dh)/2, dw, dh);
+
+  const data = sctx.getImageData(0,0,cols,rows).data;
+  const out = [];
+  const cut = S.cut, span = Math.max(0.02, 1 - cut), gamma = 1 / S.gain;
+  const wantColour = S.imgColour;
+
+  for (let r=0; r<rows; r++){
+    for (let c=0; c<cols; c++){
+      const i = (r*cols + c)*4;
+      const a = data[i+3] / 255;
+      if (a < 0.02) continue;
+      const R = data[i], G = data[i+1], B = data[i+2];
+      const lum = (0.2126*R + 0.7152*G + 0.0722*B) / 255;
+
+      let v = S.read === "alpha" ? a : S.read === "bright" ? a*lum : a*(1-lum);
+      v = (v - cut) / span;
+      if (v <= 0.04) continue;
+      v = Math.pow(clamp(v,0,1), gamma);
+
+      let col = -1;
+      if (wantColour){
+        // size already carries brightness, so normalise to keep the hue readable
+        const k = 255 / (Math.max(R,G,B) || 1);
+        col = ((Math.min(255,R*k|0) & 0xF0) << 16) | ((Math.min(255,G*k|0) & 0xF0) << 8) | (Math.min(255,B*k|0) & 0xF0);
+      }
+      out.push({ x:(c+0.5)*cell, y:(r+0.5)*cell, w:v, col });
+    }
+  }
+  return out;
+}
+
+// A full-bleed image at the finest cell can ask for 40k dots, which drops the
+// frame rate below the point where the motion reads. Keep the strongest ones.
+const DOT_BUDGET = 24000;
+function trim(targets){
+  if (targets.length <= DOT_BUDGET) return targets;
+  targets.sort((a,b) => b.w - a.w);
+  targets.length = DOT_BUDGET;
+  return targets;
+}
+
 /* ---------- morph assignment ----------
-   Every target claims the nearest unclaimed dot, so pixels shared between two
-   words stay put and only the difference travels. */
+   Every target claims the nearest unclaimed dot, so pixels two frames share
+   stay put and only the difference travels. */
 function retarget(){
-  const targets = sampleTargets(S.words[S.wordIndex] || "");
+  const targets = trim(S.mode === "image" ? sampleImage() : sampleText());
   const bs = Math.max(S.cell * 3, 18);
   const buckets = new Map();
-  const key = (x,y) => ((x/bs)|0) + ":" + ((y/bs)|0);
 
   for (const d of dots){
     d.taken = false;
     if (d.dying) continue;
-    const k = key(d.x, d.y);
+    const k = ((d.x/bs)|0) + ":" + ((d.y/bs)|0);
     let b = buckets.get(k);
     if (!b) buckets.set(k, b = []);
     b.push(d);
@@ -394,32 +491,73 @@ function retarget(){
   for (const t of targets){
     const d = take(t.x, t.y);
     if (d){
-      d.tx = t.x; d.ty = t.y; d.ts = t.w; d.taken = true; d.dying = false;
+      d.tx = t.x; d.ty = t.y; d.ts = t.w; d.pt = 1; d.col = t.col; d.taken = true; d.dying = false;
     } else {
       const a = Math.random() * Math.PI * 2;
       const r = scatter * (0.4 + Math.random() * 0.9);
       dots.push({
         x: t.x + Math.cos(a)*r, y: t.y + Math.sin(a)*r,
-        vx:0, vy:0, s:0, ts:t.w, tx:t.x, ty:t.y,
-        ox:0, oy:0, taken:true, dying:false
+        vx:0, vy:0, s:0, ts:t.w, p:0, pt:1, tx:t.x, ty:t.y,
+        col:t.col, taken:true, dying:false
       });
     }
   }
 
   for (const d of dots){
     if (d.taken || d.dying) continue;
-    d.dying = true; d.ts = 0;
+    d.dying = true; d.ts = 0; d.pt = 0;
     const a = Math.random() * Math.PI * 2;
     d.vx += Math.cos(a) * scatter * 0.05;
     d.vy += Math.sin(a) * scatter * 0.05;
   }
 
   if (!S.morph.on){
-    // hard cut: everything lands instantly
     for (let i=dots.length-1; i>=0; i--){
       const d = dots[i];
       if (d.dying){ dots.splice(i,1); continue; }
-      d.x = d.tx; d.y = d.ty; d.vx = d.vy = 0; d.s = d.ts;
+      d.x = d.tx; d.y = d.ty; d.vx = d.vy = 0; d.s = d.ts; d.p = d.pt;
+    }
+  }
+}
+
+/* ---------- batched drawing ----------
+   One fill() per dot is fine at coarse grids and crawls at fine ones. Instead the
+   dot's alpha is blended into its colour against the known background, so every
+   dot is opaque and dots sharing a colour can be drawn as a single path. */
+const BG = [0x0B, 0x0B, 0x0D];
+const GC = [255, 176, 32];
+const batch = new Map();
+let batchAge = 0;
+
+function setGlobalColour(hex){
+  GC[0] = parseInt(hex.slice(1,3),16);
+  GC[1] = parseInt(hex.slice(3,5),16);
+  GC[2] = parseInt(hex.slice(5,7),16);
+}
+
+function flushBatch(shape){
+  const CHUNK = 2400;
+  for (const b of batch.values()){
+    if (!b.n) continue;
+    ctx.fillStyle = b.css;
+    const d = b.d;
+    for (let start = 0; start < b.n; start += CHUNK*3){
+      const end = Math.min(b.n, start + CHUNK*3);
+      ctx.beginPath();
+      for (let i = start; i < end; i += 3){
+        const x = d[i], y = d[i+1], r = d[i+2];
+        if (shape === "square"){
+          ctx.rect(x - r, y - r, r*2, r*2);
+        } else if (shape === "diamond"){
+          ctx.moveTo(x, y - r); ctx.lineTo(x + r, y);
+          ctx.lineTo(x, y + r); ctx.lineTo(x - r, y);
+          ctx.closePath();
+        } else {
+          ctx.moveTo(x + r, y);
+          ctx.arc(x, y, r, 0, Math.PI*2);
+        }
+      }
+      ctx.fill();
     }
   }
 }
@@ -433,13 +571,11 @@ function frame(now){
   dt = clamp(dt, 0.2, 3);
   time += dt;
 
-  // word cycling
-  if (S.words.length > 1 && S.morph.cycle > 0){
+  if (S.mode === "text" && S.words.length > 1 && S.morph.cycle > 0){
     S.wordTimer += dt / 60;
     if (S.wordTimer >= S.morph.cycle){ S.wordTimer = 0; nextWord(); }
   }
 
-  // pointer smoothing gives the repel a bit of drag
   pointer.sx += (pointer.x - pointer.sx) * S.repel.lag * dt;
   pointer.sy += (pointer.y - pointer.sy) * S.repel.lag * dt;
 
@@ -457,9 +593,11 @@ function frame(now){
 
   ctx.fillStyle = "#0B0B0D";
   ctx.fillRect(0,0,W,H);
-  ctx.fillStyle = S.colour;
 
   const base = S.cell * S.dotScale * 0.5;
+  if (++batchAge > 240){ batch.clear(); batchAge = 0; }
+  for (const b of batch.values()) b.n = 0;
+  let lastKey = -1, lastB = null;
 
   for (let i=dots.length-1; i>=0; i--){
     const d = dots[i];
@@ -468,14 +606,16 @@ function frame(now){
     d.vy = (d.vy + (d.ty - d.y) * k * dt) * damp;
     d.x += d.vx * dt;
     d.y += d.vy * dt;
-    d.s += (d.ts - d.s) * clamp(0.16 * dt, 0, 1);
+    const ease = clamp(0.16 * dt, 0, 1);
+    d.s += (d.ts - d.s) * ease;
+    d.p += (d.pt - d.p) * ease;
 
-    if (d.dying && d.s < 0.02){ dots.splice(i,1); continue; }
+    if (d.dying && d.p < 0.02){ dots.splice(i,1); continue; }
 
     let px = d.x, py = d.y;
     if (rOn){
       const dx = px - pointer.sx, dy = py - pointer.sy;
-      const dist = Math.hypot(dx, dy);
+      const dist = Math.sqrt(dx*dx + dy*dy);
       if (dist < rR && dist > 0.001){
         const t = 1 - dist / rR;
         const push = t * t * rF;
@@ -484,7 +624,7 @@ function frame(now){
       }
     }
 
-    let mul = 1, alpha = d.s;
+    let mul = 1, alpha = d.p;
     if (wOn && amp > 0){
       const w = Math.sin((d.x * wca + d.y * wsa) * wk - wPhase);
       mul = 1 + amp * w * 0.85;
@@ -493,23 +633,31 @@ function frame(now){
     }
 
     const r = base * d.s * mul;
-    if (r < 0.18 || alpha < 0.012) continue;
+    if (r < 0.18 || alpha < 0.032) continue;
 
-    ctx.globalAlpha = alpha > 1 ? 1 : alpha;
-    if (S.shape === "square"){
-      ctx.fillRect(px - r, py - r, r*2, r*2);
-    } else if (S.shape === "diamond"){
-      ctx.beginPath();
-      ctx.moveTo(px, py - r); ctx.lineTo(px + r, py);
-      ctx.lineTo(px, py + r); ctx.lineTo(px - r, py);
-      ctx.closePath(); ctx.fill();
-    } else {
-      ctx.beginPath();
-      ctx.arc(px, py, r, 0, Math.PI*2);
-      ctx.fill();
+    const a = (alpha > 1 ? 1 : alpha) * 16 + 0.5 >> 0;  // 0..16, folded into the colour below
+    const cr = d.col >= 0 ? (d.col >> 16) & 255 : GC[0];
+    const cg = d.col >= 0 ? (d.col >> 8) & 255 : GC[1];
+    const cb = d.col >= 0 ? d.col & 255 : GC[2];
+    const qr = (BG[0] + (cr - BG[0]) * a / 16) >> 2;
+    const qg = (BG[1] + (cg - BG[1]) * a / 16) >> 2;
+    const qb = (BG[2] + (cb - BG[2]) * a / 16) >> 2;
+
+    const key = (qr << 12) | (qg << 6) | qb;
+    let b;
+    if (key === lastKey){ b = lastB; }
+    else {
+      b = batch.get(key);
+      if (!b){
+        b = { css:"rgb(" + (qr*4+2) + "," + (qg*4+2) + "," + (qb*4+2) + ")", d:[], n:0 };
+        batch.set(key, b);
+      }
+      lastKey = key; lastB = b;
     }
+    b.d[b.n++] = px; b.d[b.n++] = py; b.d[b.n++] = r;
   }
-  ctx.globalAlpha = 1;
+
+  flushBatch(S.shape);
   requestAnimationFrame(frame);
 }
 
@@ -542,9 +690,93 @@ canvas.addEventListener("pointerleave", () => { pointer.inside = false; pointer.
 canvas.addEventListener("pointerdown", e => { pointer.down = true; canvas.setPointerCapture(e.pointerId); });
 addEventListener("pointerup", () => { pointer.down = false; });
 addEventListener("keydown", e => {
-  if (e.code === "Space" && e.target.tagName !== "INPUT" && e.target.tagName !== "SELECT"){
-    e.preventDefault(); S.wordTimer = 0; nextWord();
+  const t = e.target.tagName;
+  if (e.code === "Space" && t !== "INPUT" && t !== "SELECT" && t !== "BUTTON"){
+    e.preventDefault(); S.wordTimer = 0;
+    if (S.mode === "text") nextWord();
   }
+});
+
+/* ---------- image loading ---------- */
+function loadImage(file){
+  if (!file) return;
+  if (!/^image\//.test(file.type)){
+    $("fileName").textContent = "That isn't an image";
+    $("fileMeta").textContent = "Try a PNG, JPG, GIF or SVG";
+    return;
+  }
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    // rasterise once at a sane size; SVGs without intrinsic dimensions get a default
+    const nw = img.naturalWidth || 1000, nh = img.naturalHeight || 1000;
+    const cap = 1600, sc = Math.min(1, cap / Math.max(nw, nh));
+    const buf = document.createElement("canvas");
+    buf.width = Math.max(1, Math.round(nw*sc));
+    buf.height = Math.max(1, Math.round(nh*sc));
+    const bctx = buf.getContext("2d");
+    bctx.drawImage(img, 0, 0, buf.width, buf.height);
+    URL.revokeObjectURL(url);
+
+    S.img = buf;
+    $("thumb").style.backgroundImage = "url(" + buf.toDataURL() + ")";
+    $("fileName").textContent = file.name;
+    $("fileMeta").textContent = nw + " × " + nh;
+
+    // an icon with real transparency reads as a shape; anything opaque is a photo,
+    // which needs a lower floor and more contrast to hold its midtones
+    const isIcon = hasAlpha(buf);
+    setRead(isIcon ? "alpha" : "bright");
+    setSlider("cut", isIcon ? 14 : 6);
+    setSlider("gain", isIcon ? 100 : 155);
+    setMode("image");
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(url);
+    $("fileName").textContent = "Couldn't read that file";
+    $("fileMeta").textContent = "Try a PNG, JPG, GIF or SVG";
+  };
+  img.src = url;
+}
+
+function hasAlpha(buf){
+  const w = Math.min(buf.width, 160), h = Math.min(buf.height, 160);
+  const t = document.createElement("canvas");
+  t.width = w; t.height = h;
+  const c = t.getContext("2d", { willReadFrequently:true });
+  c.drawImage(buf, 0, 0, w, h);
+  const d = c.getImageData(0,0,w,h).data;
+  let clear = 0;
+  for (let i=3; i<d.length; i+=4) if (d[i] < 24) clear++;
+  return clear > (d.length/4) * 0.06;
+}
+
+function setRead(v){
+  S.read = v;
+  $("read").value = v;
+}
+
+function setSlider(id, v){
+  const el = $(id);
+  el.value = v;
+  el.dispatchEvent(new Event("input"));
+}
+
+$("file").addEventListener("change", e => loadImage(e.target.files[0]));
+$("drop").addEventListener("click", () => $("file").click());
+
+["dragenter","dragover"].forEach(ev => stage.addEventListener(ev, e => {
+  e.preventDefault(); stage.classList.add("dragging");
+}));
+["dragleave","drop"].forEach(ev => stage.addEventListener(ev, e => {
+  e.preventDefault(); stage.classList.remove("dragging");
+}));
+stage.addEventListener("drop", e => {
+  if (e.dataTransfer && e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
+});
+addEventListener("paste", e => {
+  const items = e.clipboardData && e.clipboardData.files;
+  if (items && items[0]) loadImage(items[0]);
 });
 
 /* ---------- controls ---------- */
@@ -556,22 +788,48 @@ function bindRange(id, outId, apply, fmt){
 }
 const pct = v => (v/100).toFixed(2);
 
+function setMode(mode){
+  S.mode = mode;
+  const isText = mode === "text";
+  $("tabText").setAttribute("aria-selected", String(isText));
+  $("tabImage").setAttribute("aria-selected", String(!isText));
+  $("panelText").classList.toggle("hidden", !isText);
+  $("panelImage").classList.toggle("hidden", isText);
+  stage.classList.toggle("empty", !isText && !S.img);
+  syncColourUI();
+  retarget();
+}
+$("tabText").addEventListener("click", () => setMode("text"));
+$("tabImage").addEventListener("click", () => setMode("image"));
+
 function setWords(str){
   const list = str.split(",").map(s => s.trim()).filter(Boolean);
   S.words = list.length ? list : [""];
   S.wordIndex = Math.min(S.wordIndex, S.words.length - 1);
   S.wordTimer = 0;
-  retarget();
+  if (S.mode === "text") retarget();
 }
 $("text").addEventListener("input", e => setWords(e.target.value));
 $("font").addEventListener("change", async e => {
   S.font = e.target.value;
-  try { await document.fonts.load('100px ' + S.font); } catch {}
-  retarget();
+  try { await document.fonts.load('100px ' + S.font); } catch (err) {}
+  if (S.mode === "text") retarget();
 });
 $("shape").addEventListener("change", e => { S.shape = e.target.value; });
+$("read").addEventListener("change", e => { S.read = e.target.value; retarget(); });
+
+function syncColourUI(){
+  $("swatches").classList.toggle("muted", S.mode === "image" && S.imgColour);
+}
+$("imgColour").addEventListener("change", e => {
+  S.imgColour = e.target.checked;
+  syncColourUI();
+  retarget();
+});
 
 bindRange("fit","fitOut", v => { S.fit = v/100; retarget(); }, v => v + "%");
+bindRange("cut","cutOut", v => { S.cut = v/100; if (S.mode === "image") retarget(); }, pct);
+bindRange("gain","gainOut", v => { S.gain = v/100; if (S.mode === "image") retarget(); }, pct);
 bindRange("cell","cellOut", v => { S.cell = v; retarget(); }, v => String(v));
 bindRange("dot","dotOut", v => { S.dotScale = v/100; }, v => v + "%");
 
@@ -591,8 +849,11 @@ bindRange("waveAngle","waveAngleOut", v => { S.wave.angle = v; }, v => v + "°")
 
 function bindToggle(id, modId, apply){
   const el = $(id), mod = $(modId);
-  const run = () => { apply(el.checked); mod.classList.toggle("on", el.checked);
-    mod.querySelectorAll("input[type=range]").forEach(r => r.disabled = !el.checked); };
+  const run = () => {
+    apply(el.checked);
+    mod.classList.toggle("on", el.checked);
+    mod.querySelectorAll("input[type=range]").forEach(r => r.disabled = !el.checked);
+  };
   el.addEventListener("change", run); run();
 }
 bindToggle("morphOn","modMorph", on => { S.morph.on = on; });
@@ -607,7 +868,7 @@ PALETTE.forEach(hex => {
   b.setAttribute("aria-label", "Dot colour " + hex);
   b.setAttribute("aria-pressed", String(hex === S.colour));
   b.addEventListener("click", () => {
-    S.colour = hex;
+    S.colour = hex; setGlobalColour(hex);
     sw.querySelectorAll(".swatch").forEach(x => x.setAttribute("aria-pressed","false"));
     b.setAttribute("aria-pressed","true");
   });
@@ -617,6 +878,8 @@ PALETTE.forEach(hex => {
 /* ---------- go ---------- */
 if (reduced){ $("waveOn").checked = false; $("waveOn").dispatchEvent(new Event("change")); }
 setWords($("text").value);
+setGlobalColour(S.colour);
+syncColourUI();
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { resize(); });
 resize();
 requestAnimationFrame(frame);
