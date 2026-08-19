@@ -69,7 +69,9 @@ motion to read.
   exports a standalone embed by stringifying it, so it must not reference anything
   outside itself.
 - `index.html` — the studio: controls, image loading, export.
-- `.github/workflows/pages.yml` — publishes the repo to GitHub Pages.
+- `.github/workflows/pages.yml` — publishes the repo to GitHub Pages. One-time
+  setup: repo Settings → Pages → Source: **GitHub Actions**. The workflow token
+  can't switch that on itself; after that every push deploys.
 
 ### Using the engine directly
 
