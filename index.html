@@ -147,6 +147,12 @@ input[type=range]:disabled{opacity:.35}
 
 .swatches{display:flex;gap:6px;align-items:center}
 .swatch{width:22px;height:22px;border-radius:50%;border:1px solid var(--line);padding:0;cursor:pointer;transition:transform .12s}
+.swatch.custom{-webkit-appearance:none;appearance:none;background:none;overflow:hidden}
+.swatch.custom::-webkit-color-swatch-wrapper{padding:0}
+.swatch.custom::-webkit-color-swatch{border:none;border-radius:50%}
+.swatch.custom::-moz-color-swatch{border:none;border-radius:50%}
+.hexval{color:var(--ink-dim);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+#customRow.muted{opacity:.3;pointer-events:none}
 .swatch:hover{transform:scale(1.12)}
 .swatch[aria-pressed=true]{box-shadow:0 0 0 2px var(--panel),0 0 0 3px var(--amber)}
 .swatch:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
@@ -254,6 +260,12 @@ input[type=range]:disabled{opacity:.35}
         <div class="ctl"><span class="k">Colour</span>
           <div class="swatches span2" id="swatches"></div>
         </div>
+        <div class="ctl" id="customRow"><span class="k">Custom</span>
+          <div class="span2 row">
+            <input type="color" id="custom" class="swatch custom" value="#FFB020" aria-label="Custom dot colour">
+            <span class="hexval" id="customHex">#FFB020</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -293,35 +305,15 @@ input[type=range]:disabled{opacity:.35}
     </section>
 
     <section class="mod on" id="modExport">
-      <div class="mod-head"><h2>Export</h2></div>
+      <div class="mod-head"><h2>Embed</h2></div>
       <div class="ctrls">
-        <div class="ctl"><span class="k">Still</span>
-          <div class="span2 row">
-            <select id="pngScale" aria-label="Still resolution">
-              <option value="1">1×</option>
-              <option value="2" selected>2×</option>
-              <option value="3">3×</option>
-            </select>
-            <button type="button" class="btn" id="savePng">Save PNG</button>
-          </div>
-        </div>
-        <div class="ctl"><span class="k">Video</span>
-          <div class="span2 row">
-            <select id="vidSecs" aria-label="Recording length">
-              <option value="3">3s</option>
-              <option value="6" selected>6s</option>
-              <option value="10">10s</option>
-            </select>
-            <button type="button" class="btn" id="recVid">Record</button>
-          </div>
-        </div>
-        <div class="ctl"><span class="k">Embed</span>
-          <div class="span2 row">
+        <div class="ctl wide">
+          <div class="row">
             <button type="button" class="btn" id="copyEmbed">Copy code</button>
             <button type="button" class="btn" id="saveEmbed">Save file</button>
           </div>
         </div>
-        <div class="ctl wide"><div class="field-note live" id="exportNote">Embed code carries your current settings and runs on its own — no dependencies.</div></div>
+        <div class="ctl wide"><div class="field-note live" id="exportNote">Carries your current settings, runs on its own, and draws on a transparent background.</div></div>
         <div class="ctl wide hidden" id="codeWrap">
           <textarea id="code" readonly spellcheck="false" aria-label="Embed code"></textarea>
         </div>
@@ -347,12 +339,15 @@ const S = {
   font:'"Archivo Black",Impact,sans-serif',
   read:"alpha", cut:0.14, gain:1, imgColour:false,
   fit:0.78, cell:11, dotScale:0.82, shape:"circle",
-  colour:"#FFB020", bg:"#0B0B0D",
+  colour:"#FFB020",
   morph:{ on:true, k:0.20, damp:0.76, scatter:70, cycle:2.5 },
   repel:{ on:true, r:170, f:70, lag:0.16 },
   wave:{ on:!reduced, amp:0.46, len:240, speed:0.34, angle:28 }
 };
 
+// bg stays out of S: the canvas is transparent and .stage paints the ground,
+// so what you see is what an embed puts on your own page.
+const GROUND = "#0B0B0D";
 const engine = OddgridEngine(stage, S);
 const push = patch => { Object.assign(S, patch); engine.set(patch); };
 
@@ -399,7 +394,9 @@ $("shape").addEventListener("change", e => push({ shape:e.target.value }));
 $("read").addEventListener("change", e => push({ read:e.target.value }));
 
 function syncColourUI(){
-  $("swatches").classList.toggle("muted", S.mode === "image" && S.imgColour);
+  const off = S.mode === "image" && S.imgColour;
+  $("swatches").classList.toggle("muted", off);
+  $("customRow").classList.toggle("muted", off);
 }
 $("imgColour").addEventListener("change", e => {
   push({ imgColour:e.target.checked });
@@ -442,18 +439,26 @@ bindToggle("waveOn","modWave","wave");
 
 const PALETTE = ["#FFB020","#F2F0EA","#4ADE80","#5B9BFF","#FF5C4D","#C77DFF"];
 const sw = $("swatches");
+const custom = $("custom");
+
+function pickColour(hex, pressed){
+  push({ colour:hex });
+  custom.value = hex;
+  $("customHex").textContent = hex.toUpperCase();
+  sw.querySelectorAll(".swatch").forEach(x => x.setAttribute("aria-pressed","false"));
+  if (pressed) pressed.setAttribute("aria-pressed","true");
+}
+
 PALETTE.forEach(hex => {
   const b = document.createElement("button");
   b.type = "button"; b.className = "swatch"; b.style.background = hex;
   b.setAttribute("aria-label", "Dot colour " + hex);
   b.setAttribute("aria-pressed", String(hex === S.colour));
-  b.addEventListener("click", () => {
-    push({ colour:hex });
-    sw.querySelectorAll(".swatch").forEach(x => x.setAttribute("aria-pressed","false"));
-    b.setAttribute("aria-pressed","true");
-  });
+  b.addEventListener("click", () => pickColour(hex, b));
   sw.appendChild(b);
 });
+
+custom.addEventListener("input", () => pickColour(custom.value, null));
 
 addEventListener("keydown", e => {
   const t = e.target.tagName;
@@ -547,57 +552,6 @@ function busy(btn, label){
   return () => { btn.disabled = false; btn.classList.remove("busy"); btn.textContent = original; };
 }
 
-$("savePng").addEventListener("click", async () => {
-  const btn = $("savePng"), done = busy(btn, "Saving…");
-  const scale = +$("pngScale").value;
-  const c = engine.snapshot(scale);
-  const blob = await new Promise(r => c.toBlob(r, "image/png"));
-  const res = await saveFile("oddgrid.png", blob);
-  note(res === "saved" ? "Saved " + c.width + " × " + c.height + " PNG."
-     : res === "declined" ? "Save cancelled."
-     : "Couldn't save the PNG.");
-  done();
-});
-
-$("recVid").addEventListener("click", async () => {
-  const btn = $("recVid");
-  const seconds = +$("vidSecs").value;
-  const types = [
-    ["video/mp4;codecs=avc1", "mp4"],
-    ["video/webm;codecs=vp9", "webm"],
-    ["video/webm;codecs=vp8", "webm"],
-    ["video/webm", "webm"]
-  ];
-  const pick = types.find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t[0]));
-  if (!pick){ note("This browser can't record canvas video."); return; }
-
-  const done = busy(btn, seconds + "s");
-  const stream = engine.canvas.captureStream(60);
-  const rec = new MediaRecorder(stream, { mimeType:pick[0], videoBitsPerSecond:12000000 });
-  const chunks = [];
-  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-  const stopped = new Promise(r => { rec.onstop = r; });
-
-  rec.start();
-  const t0 = performance.now();
-  const tick = setInterval(() => {
-    const left = Math.max(0, seconds - (performance.now() - t0)/1000);
-    btn.textContent = left.toFixed(1) + "s";
-  }, 100);
-  setTimeout(() => rec.stop(), seconds * 1000);
-  await stopped;
-  clearInterval(tick);
-  stream.getTracks().forEach(t => t.stop());
-
-  const blob = new Blob(chunks, { type:pick[0] });
-  const res = await saveFile("oddgrid." + pick[1], blob);
-  note(res === "saved" ? "Saved " + seconds + "s " + pick[1].toUpperCase() + " (" + fmtSize(blob.size) + ")."
-     : res === "declined" ? "Save cancelled."
-     : res === "too_large" ? "Recording is over the 16 MB limit — try a shorter clip."
-     : "Couldn't save the recording.");
-  done();
-});
-
 const fmtSize = n => n > 1048576 ? (n/1048576).toFixed(1) + " MB" : Math.round(n/1024) + " KB";
 
 const GOOGLE_FACES = {
@@ -625,7 +579,7 @@ function buildEmbed(){
     mode:S.mode, words:S.words, font:S.font,
     image:embedImage(), read:S.read, cut:S.cut, gain:S.gain, imgColour:S.imgColour,
     fit:S.fit, cell:S.cell, dotScale:S.dotScale, shape:S.shape,
-    colour:S.colour, bg:S.bg,
+    colour:S.colour,
     morph:S.morph, repel:S.repel, wave:S.wave
   };
   const face = GOOGLE_FACES[S.font];
@@ -633,21 +587,21 @@ function buildEmbed(){
     ? '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=' + face + '&display=swap">\n'
     : "";
   return fontLink +
-    '<div id="oddgrid" style="width:100%;height:min(' + size.h + 'px,70vh);background:' + S.bg + '"></div>\n' +
+    '<div id="oddgrid" style="width:100%;height:min(' + size.h + 'px,70vh)"></div>\n' +
     "<script>\n" + OddgridEngine.toString() + "\n" +
     "OddgridEngine(document.getElementById('oddgrid'), " + JSON.stringify(opts) + ");\n" +
     "<\/script>";
 }
 
 function noteEmbedSize(){
-  note("Embed code is about " + fmtSize(buildEmbed().length) + " and runs on its own — no dependencies.");
+  note("About " + fmtSize(buildEmbed().length) + ". No dependencies, transparent background.");
 }
 
 $("copyEmbed").addEventListener("click", async () => {
   const code = buildEmbed();
   try {
     await navigator.clipboard.writeText(code);
-    note("Copied " + fmtSize(code.length) + " of embed code. Paste it into any HTML block.");
+    note("Copied " + fmtSize(code.length) + ". Paste it into any HTML block.");
   } catch (err){
     $("codeWrap").classList.remove("hidden");
     $("code").value = code;
@@ -659,13 +613,13 @@ $("copyEmbed").addEventListener("click", async () => {
 $("saveEmbed").addEventListener("click", async () => {
   const btn = $("saveEmbed"), done = busy(btn, "Saving…");
   const page = "<!doctype html>\n<html><head><meta charset=\"utf-8\">" +
-    "<title>Oddgrid</title><style>html,body{margin:0;height:100%;background:" + S.bg + "}" +
+    "<title>Oddgrid</title><style>html,body{margin:0;height:100%;background:" + GROUND + "}" +
     "#oddgrid{width:100vw;height:100vh}</style></head><body>\n" +
     buildEmbed().replace(/height:min\([^)]*\)/, "height:100%") +
     "\n</body></html>";
   let res = await saveFile("oddgrid.html", page);
   if (res === "extension") res = await saveFile("oddgrid-embed.txt", page);
-  note(res === "saved" ? "Saved a standalone page. Open it, or upload it and use an iframe."
+  note(res === "saved" ? "Saved a standalone page — same embed on a dark ground so it stands alone."
      : res === "declined" ? "Save cancelled."
      : "Couldn't save the file — use Copy code instead.");
   done();

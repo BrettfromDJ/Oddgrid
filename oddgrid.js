@@ -22,7 +22,7 @@ function OddgridEngine(host, opts){
     font:'"Archivo Black",Impact,sans-serif',
     image:null, read:"alpha", cut:0.14, gain:1, imgColour:false,
     fit:0.78, cell:11, dotScale:0.82, shape:"circle",
-    colour:"#FFB020", bg:"#0B0B0D",
+    colour:"#FFB020", bg:null,   // null leaves the canvas transparent
     interactive:true,
     morph:{ on:true, k:0.20, damp:0.76, scatter:70, cycle:2.5 },
     repel:{ on:true, r:170, f:70, lag:0.16 },
@@ -49,7 +49,7 @@ function OddgridEngine(host, opts){
   canvas.style.height = "100%";
   canvas.style.touchAction = "none";
   host.appendChild(canvas);
-  var ctx = canvas.getContext("2d", { alpha:false });
+  var ctx = canvas.getContext("2d");
 
   var W = 0, H = 0, dpr = 1;
   var dots = [];
@@ -258,12 +258,13 @@ function OddgridEngine(host, opts){
   }
 
   /* ---------- drawing ----------
-     One fill() per dot crawls at fine grids. Instead each dot's opacity is blended
-     into its colour against the known background, so every dot is opaque and dots
-     sharing a colour draw as a single path. */
+     One fill() per dot crawls at fine grids, so dots are bucketed by colour and by
+     quantised opacity: each bucket is one globalAlpha, one fillStyle and one path.
+     The canvas itself stays transparent unless a background is asked for. */
   var batch = new Map();
   var batchAge = 0;
-  var BG = [11,11,13], GC = [255,176,32];
+  var batchColour = null;
+  var GC = [255,176,32];
 
   function readHex(hex, into){
     into[0] = parseInt(hex.slice(1,3),16);
@@ -272,12 +273,13 @@ function OddgridEngine(host, opts){
   }
 
   function paint(g, scale){
-    readHex(O.bg, BG);
     readHex(O.colour, GC);
+    // buckets cache their fill string, so a colour change has to void them
+    if (O.colour !== batchColour){ batch.clear(); batchColour = O.colour; }
 
     g.setTransform(scale,0,0,scale,0,0);
-    g.fillStyle = O.bg;
-    g.fillRect(0,0,W,H);
+    g.clearRect(0,0,W,H);
+    if (O.bg){ g.fillStyle = O.bg; g.fillRect(0,0,W,H); }
 
     if (++batchAge > 240){ batch.clear(); batchAge = 0; }
     batch.forEach(function(b){ b.n = 0; });
@@ -319,21 +321,22 @@ function OddgridEngine(host, opts){
       var r = base * d.s * mul;
       if (r < 0.18 || alpha < 0.032) continue;
 
-      var a = (alpha > 1 ? 1 : alpha) * 16 + 0.5 >> 0;
-      var cr = d.col >= 0 ? (d.col >> 16) & 255 : GC[0];
-      var cg = d.col >= 0 ? (d.col >> 8) & 255 : GC[1];
-      var cb = d.col >= 0 ? d.col & 255 : GC[2];
-      var qr = (BG[0] + (cr - BG[0]) * a / 16) >> 2;
-      var qg = (BG[1] + (cg - BG[1]) * a / 16) >> 2;
-      var qb = (BG[2] + (cb - BG[2]) * a / 16) >> 2;
+      var a = (alpha > 1 ? 1 : alpha) * 16 + 0.5 >> 0;   // 0..16
+      var cr, cg, cb, key;
+      if (d.col >= 0){
+        cr = (d.col >> 16) & 255; cg = (d.col >> 8) & 255; cb = d.col & 255;
+        key = ((((cr >> 4) << 8) | ((cg >> 4) << 4) | (cb >> 4)) << 5) | a;
+      } else {
+        cr = GC[0]; cg = GC[1]; cb = GC[2];
+        key = (1 << 17) | a;   // the flat colour gets its own space, exact
+      }
 
-      var key = (qr << 12) | (qg << 6) | qb;
       var b;
       if (key === lastKey){ b = lastB; }
       else {
         b = batch.get(key);
         if (!b){
-          b = { css:"rgb(" + (qr*4+2) + "," + (qg*4+2) + "," + (qb*4+2) + ")", d:[], n:0 };
+          b = { css:"rgb(" + cr + "," + cg + "," + cb + ")", alpha:a/16, d:[], n:0 };
           batch.set(key, b);
         }
         lastKey = key; lastB = b;
@@ -344,6 +347,7 @@ function OddgridEngine(host, opts){
     var CHUNK = 2400, shape = O.shape;
     batch.forEach(function(b){
       if (!b.n) return;
+      g.globalAlpha = b.alpha;
       g.fillStyle = b.css;
       for (var start=0; start<b.n; start += CHUNK*3){
         var end = Math.min(b.n, start + CHUNK*3);
@@ -361,6 +365,7 @@ function OddgridEngine(host, opts){
         g.fill();
       }
     });
+    g.globalAlpha = 1;
   }
 
   /* ---------- loop ---------- */
@@ -461,15 +466,6 @@ function OddgridEngine(host, opts){
     next: next,
     retarget: retarget,
     size: function(){ return { w:W, h:H }; },
-    // Draw one frame into a fresh canvas at any scale. Dot geometry is in CSS
-    // pixels, so scaling the transform gives a clean render at any resolution.
-    snapshot: function(scale){
-      var c = document.createElement("canvas");
-      c.width = Math.round(W * scale);
-      c.height = Math.round(H * scale);
-      paint(c.getContext("2d"), scale);
-      return c;
-    },
     destroy: function(){ running = false; ro.disconnect(); canvas.remove(); }
   };
 }
